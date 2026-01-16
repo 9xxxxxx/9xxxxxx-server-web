@@ -4,12 +4,13 @@ import BlogPostClient from "./client";
 
 export const revalidate = 60;
 
-export async function generateStaticParams() {
-  const posts = await getAllPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
-}
+// Generate static params (SSG) - Disabled for deployment without build-time DB access
+// export async function generateStaticParams() {
+//   const posts = await getAllPosts();
+//   return posts.map((post) => ({
+//     slug: post.slug,
+//   }));
+// }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
