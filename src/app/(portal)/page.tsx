@@ -10,10 +10,12 @@ import { formatDate } from "@/lib/utils";
 export const revalidate = 60;
 
 export default async function Home() {
-  const projects = await getAllProjects();
-  const allPosts = await getAllPosts();
+  // Removed DB queries to avoid build-time dependency
+  // Data will be loaded at runtime
+  const projects = [];
+  const allPosts = [];
   const recentPosts = allPosts.slice(0, 3);
-  const featuredProjects = projects.slice(0, 3); // Or filter by 'featured' if we had it
+  const featuredProjects = projects.slice(0, 3);
 
   return (
     <div className="flex flex-col w-full">
