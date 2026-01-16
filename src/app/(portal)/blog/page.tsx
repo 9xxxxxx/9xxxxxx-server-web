@@ -4,7 +4,8 @@ import BlogClientPage from "./client";
 export const dynamic = 'force-dynamic';
 
 export default async function BlogPage() {
-  const posts = await getAllPosts();
+  // Removed DB query to avoid build-time dependency
+  const posts: any[] = [];
   const categories = await getAllCategories();
   const tags = await getAllTags();
 

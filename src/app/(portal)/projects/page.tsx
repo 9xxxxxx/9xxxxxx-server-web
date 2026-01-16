@@ -48,7 +48,7 @@ export default async function ProjectsPage() {
                     {project.description}
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
-                    {project.techStack.slice(0, 3).map(tech => (
+                    {project.techStack.slice(0, 3).map((tech: string) => (
                         <span key={tech} className="text-xs px-2 py-1 rounded-md bg-accent/50 text-accent-foreground border border-white/5">
                             {tech}
                         </span>
