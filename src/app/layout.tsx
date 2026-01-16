@@ -1,66 +1,53 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
-import { SocialSidebar } from "@/components/SocialSidebar";
-import { RightNav } from "@/components/RightNav";
-import { ModeToggle } from "@/components/ThemeToggle";
-import { Home as HomeIcon, User, Briefcase, BookOpen, UserCircle2 } from "lucide-react";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Garry-9xxxxxx",
   description: "Built with Next.js and Tailwind CSS",
 };
 
+import { Footer } from "@/components/Footer";
+import { GlobalBackground } from "@/components/GlobalBackground";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { CommandMenu } from "@/components/CommandMenu";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const navItems = [
-    {
-      name: "首页",
-      link: "#home", // Changed from / to #home
-      icon: <HomeIcon className="h-4 w-4" />,
-    },
-    {
-      name: "关于",
-      link: "/#about",
-      icon: <UserCircle2 className="h-4 w-4" />,
-    },
-    {
-      name: "技能",
-      link: "/#skills",
-      icon: <User className="h-4 w-4" />,
-    },
-    {
-      name: "项目",
-      link: "/#projects",
-      icon: <Briefcase className="h-4 w-4" />,
-    },
-    {
-      name: "博客",
-      link: "/blog",
-      icon: <BookOpen className="h-4 w-4" />,
-    },
-  ];
-
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-background text-foreground transition-colors duration-300">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        />
+      </head>
+      <body className={`font-sans antialiased bg-transparent text-foreground transition-colors duration-300 min-h-screen flex flex-col relative selection:bg-indigo-100 selection:text-indigo-900`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {/* 全局固定 UI：位于 template 之外，确保 position: fixed 真正相对于屏幕 */}
-          <SocialSidebar />
-          <RightNav navItems={navItems} />
-          <div className="fixed top-5 right-5 z-[5000]">
-            <ModeToggle />
-          </div>
+          {/* Global Dynamic Background */}
+          <GlobalBackground />
+          <CommandMenu />
+          
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
 
-          {children}
+          <main className="flex-1 w-full relative z-10">
+            {children}
+          </main>
+          
+          <ScrollToTop />
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

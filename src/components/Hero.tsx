@@ -1,99 +1,81 @@
 "use client";
-import React, { useEffect } from "react";
-import { Spotlight } from "@/components/ui/Spotlight";
-import { SparklesCore } from "@/components/ui/sparkles";
-import { motion, useMotionValue, useMotionTemplate, animate } from "framer-motion";
+import React from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { ChevronRight, ArrowRight } from "lucide-react";
 
 export function Hero() {
-  // 使用 Motion Value 驱动动画，而非 React State 或 CSS Keyframes，确保极致丝滑
-  const maskPosition = useMotionValue(0);
-
-  useEffect(() => {
-    // 创建一个从 0% 到 100% 的循环动画
-    const controls = animate(maskPosition, 100, {
-      duration: 5,           // 稍微放慢一点，增加优雅感
-      repeat: Infinity,
-      repeatType: "reverse", // 来回扫描
-      ease: "easeInOut",     // 柔和的加减速
-    });
-    return controls.stop;
-  }, []);
-
-  // 动态生成遮罩样式
-  const maskImage = useMotionTemplate`radial-gradient(300px circle at ${maskPosition}% 50%, black 40%, transparent 100%)`;
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.8, ease: "easeOut" }
+  };
 
   return (
-    <div className="h-full min-h-screen w-full flex md:items-center md:justify-center bg-background dark:bg-slate-950/[0.9] antialiased bg-grid-white/[0.02] relative overflow-hidden">
+    <div className="min-h-[85vh] w-full flex flex-col items-center justify-center relative overflow-hidden pt-20">
       
-      {/* 1. 氛围背景光 */}
-      <Spotlight
-        className="-top-40 left-0 md:left-60 md:-top-20 h-[80vh] w-[80vw]"
-        fill="#0891b2"
-        fillOpacity="0.1"
-      />
+      {/* Local blobs removed in favor of Global Layout Background */}
 
-      {/* Sparkles */}
-      <div className="w-full absolute inset-0 h-full z-0">
-        <SparklesCore
-          id="tsparticlesfullpage"
-          background="transparent"
-          minSize={0.6}
-          maxSize={1.4}
-          particleDensity={50}
-          className="w-full h-full"
-          particleColor="#0891b2"
-        />
-      </div>
-
-      {/* Content */}
-      <div className="p-4 max-w-7xl mx-auto relative z-10 w-full pt-20 md:pt-0 flex flex-col items-center justify-center min-h-[calc(100vh-100px)]">
+      <div className="max-w-5xl mx-auto px-6 z-10 text-center flex flex-col items-center">
         
-        {/* --- 核心特效：光照变色标语 --- */}
-        <div className="relative mb-8">
-            {/* 底层：暗淡的文字 */}
-            <h1 className="text-4xl md:text-7xl font-bold text-center text-slate-300/20 dark:text-slate-700/50 tracking-tight">
-              数据驱动，洞见未来。
-            </h1>
+        {/* Eyebrow - Colorful Pill */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white/60 backdrop-blur-sm border border-white/50 px-4 py-1.5 rounded-full shadow-sm mb-6 inline-flex items-center"
+        >
+          <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
+          <span className="text-slate-600 text-sm font-medium">Hello, I'm Garry</span>
+        </motion.div>
 
-            {/* 顶层：高亮的文字 */}
-            <motion.h1
-              className="absolute inset-0 text-4xl md:text-7xl font-bold text-center text-cyan-500 dark:text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] tracking-tight"
-              style={{ 
-                maskImage,
-                WebkitMaskImage: maskImage
-              }}
+        {/* Main Headline - Not Flat */}
+        <motion.h1 
+           variants={fadeInUp}
+           initial="initial"
+           animate="animate"
+           className="text-6xl md:text-8xl font-black tracking-tight text-slate-900 mb-10 drop-shadow-sm flex flex-col items-center gap-4 -skew-x-12 transform"
+        >
+          <div className="-ml-12 md:-ml-24 transition-transform hover:skew-x-12 duration-500">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">数据</span> 驱动
+          </div>
+          <div className="ml-12 md:ml-24 transition-transform hover:skew-x-12 duration-500">
+            洞见 <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">未来</span>
+          </div>
+        </motion.h1>
+
+        {/* Subheadline */}
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-xl md:text-2xl text-slate-600 font-medium max-w-2xl mx-auto mb-10 leading-relaxed"
+        >
+         Blending technical precision with human-centric design.
+        </motion.p>
+
+        {/* Buttons - Colorful & distinct */}
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.6, delay: 0.4 }}
+           className="flex flex-col sm:flex-row gap-5 items-center"
+        >
+            <Link 
+              href="/projects" 
+              className="px-8 py-4 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 transition-all transform hover:-translate-y-1 flex items-center"
             >
-              数据驱动，洞见未来。
-            </motion.h1>
-        </div>
-
-        <p className="font-normal text-lg md:text-xl text-muted-foreground max-w-2xl text-center mx-auto mb-12 leading-relaxed">
-          将复杂的原始数据转化为<span className="text-foreground font-medium">可落地的商业智能</span>。<br/>
-          专注于 Python、SQL 及高级数据分析领域。
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
-            <a href="#projects" className="px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:bg-cyan-600 transition-colors shadow-lg shadow-cyan-500/20">
-                查看我的作品
-            </a>
-            <a href="#contact" className="px-8 py-3 rounded-full bg-card border border-border text-foreground font-medium hover:bg-accent transition-colors">
-                联系我
-            </a>
-        </div>
+                View Projects 
+            </Link>
+            <Link 
+              href="/about" 
+              className="px-8 py-4 rounded-2xl bg-white text-slate-700 font-bold border border-slate-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all flex items-center shadow-sm"
+            >
+                About Me <ArrowRight className="ml-2 w-5 h-5" />
+            </Link>
+        </motion.div>
 
       </div>
-
-      {/* Scroll Indicator */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-      >
-        <span className="text-xs text-muted-foreground uppercase tracking-widest">Scroll</span>
-        <div className="w-[1px] h-12 bg-gradient-to-b from-transparent via-cyan-500 to-transparent animate-pulse"></div>
-      </motion.div>
     </div>
   );
 }

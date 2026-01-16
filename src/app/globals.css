@@ -6,67 +6,65 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Light Mode - Slate & Cyan */
-  --background: #f8fafc; /* Slate-50 */
-  --foreground: #0f172a; /* Slate-900 */
+  /* Vibrant Harmony - Warm & Cool Mix */
 
+  /* Base - Warm Stone (Better Contrast) */
+  --background: #f5f5f4;
+  --foreground: #1e293b; /* Slate 800 - Softer content text */
+
+  /* Components */
   --card: #ffffff;
-  --card-foreground: #0f172a;
-
+  --card-foreground: #1e293b;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover-foreground: #1e293b;
 
-  --primary: #0891b2; /* Cyan-600 */
+  /* Primary - Cool Indigo (Anchor) */
+  --primary: #4f46e5;
   --primary-foreground: #ffffff;
 
-  --secondary: #f1f5f9; /* Slate-100 */
-  --secondary-foreground: #0f172a; /* Slate-900 */
+  /* Secondary - Warm Amber (Spark) */
+  --secondary: #fff7ed; /* Orange 50 */
+  --secondary-foreground: #9a3412; /* Orange 800 */
 
-  --muted: #f1f5f9; /* Slate-100 */
-  --muted-foreground: #64748b; /* Slate-500 */
+  /* Muted - Neutral Slate */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 
-  --accent: #ecfeff; /* Cyan-50 */
-  --accent-foreground: #0891b2; /* Cyan-600 */
+  /* Accent - Soft Violet */
+  --accent: #f5f3ff;
+  --accent-foreground: #5b21b6;
 
-  --destructive: #ef4444; /* Red-500 */
-  --destructive-foreground: #f8fafc;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 
-  --border: #e2e8f0; /* Slate-200 */
+  --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #0891b2; /* Cyan-600 */
+  --ring: #6366f1;
 
-  --radius: 0.5rem;
+  --radius: 16px; /* Playful rounded corners */
 }
 
+/* Force Light Mode only per request */
 .dark {
-  /* Dark Mode - Deep Slate & Neon Cyan */
-  --background: #020617; /* Slate-950 */
-  --foreground: #f8fafc; /* Slate-50 */
-
-  --card: #0f172a; /* Slate-900 */
-  --card-foreground: #f8fafc;
-
-  --popover: #0f172a;
-  --popover-foreground: #f8fafc;
-
-  --primary: #22d3ee; /* Cyan-400 */
-  --primary-foreground: #020617;
-
-  --secondary: #1e293b; /* Slate-800 */
-  --secondary-foreground: #f8fafc;
-
-  --muted: #1e293b; /* Slate-800 */
-  --muted-foreground: #94a3b8; /* Slate-400 */
-
-  --accent: #164e63; /* Cyan-900 */
-  --accent-foreground: #22d3ee; /* Cyan-400 */
-
-  --destructive: #7f1d1d; /* Red-900 */
-  --destructive-foreground: #f8fafc;
-
-  --border: #1e293b; /* Slate-800 */
-  --input: #1e293b;
-  --ring: #06b6d4; /* Cyan-500 */
+  --background: #fdfbf7;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #fff7ed;
+  --secondary-foreground: #9a3412;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f5f3ff;
+  --accent-foreground: #5b21b6;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #6366f1;
 }
 
 @theme inline {
@@ -91,8 +89,8 @@
   --color-ring: var(--ring);
   --radius-radius: var(--radius);
 
-  --animate-spotlight: spotlight 2s ease .75s 1 forwards;
-  
+  --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
+
   @keyframes spotlight {
     0% {
       opacity: 0;
@@ -110,32 +108,63 @@ body {
   color: var(--foreground);
 }
 
-/* 全屏滚动容器配置 */
 html {
-  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
-}
-
-/* 每个全屏 Section 的通用样式 */
-.snap-section {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  /* 确保内容不会被 fixed header 遮挡，如有需要 */
-  position: relative;
 }
 
 .bg-grid-white {
   background-size: 40px 40px;
-  background-image: linear-gradient(to right, rgba(200, 200, 200, 0.2) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(200, 200, 200, 0.2) 1px, transparent 1px);
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
-.dark .bg-grid-white {
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+/* EasyMDE Customization */
+.prose-editor .EasyMDEContainer .editor-toolbar {
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+  border-color: var(--border) !important;
+  background-color: var(--muted) !important;
+}
+
+.prose-editor .EasyMDEContainer .editor-toolbar button {
+  color: var(--foreground) !important;
+}
+
+.prose-editor .EasyMDEContainer .editor-toolbar button.active,
+.prose-editor .EasyMDEContainer .editor-toolbar button:hover {
+  background-color: var(
+    --primary
+  ) !important; /* Changed to primary for better visibility */
+  border-color: var(--border) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.prose-editor .EasyMDEContainer .CodeMirror {
+  border-radius: 0 0 var(--radius) var(--radius) !important;
+  border-color: var(--border) !important;
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+}
+
+.prose-editor .EasyMDEContainer .CodeMirror-cursor {
+  border-color: var(--primary) !important;
+}
+
+.prose-editor .EasyMDEContainer .editor-preview {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.prose-editor .EasyMDEContainer .editor-statusbar {
+  border-color: var(--border) !important;
+  color: var(--muted-foreground) !important;
+}
+
+.prose-editor .editor-toolbar i.separator {
+  border-left-color: var(--border) !important;
+  border-right-color: transparent !important;
 }
