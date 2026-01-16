@@ -12,21 +12,23 @@ export const revalidate = 60;
 //   }));
 // }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = await getPostBySlug(slug);
-  if (!post) {
-    return { title: "文章未找到" };
-  }
-  return {
-    title: `${post.title} | Garry-9xxxxxx 博客`,
-    description: post.description,
-    openGraph: {
-      title: post.title,
-      description: post.description,
-    },
-  };
-}
+// Metadata generation disabled for build-time DB independence
+// Metadata will be set dynamically at runtime via next/head or in the client component
+// export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+//   const { slug } = await params;
+//   const post = await getPostBySlug(slug);
+//   if (!post) {
+//     return { title: "文章未找到" };
+//   }
+//   return {
+//     title: `${post.title} | Garry-9xxxxxx 博客`,
+//     description: post.description,
+//     openGraph: {
+//       title: post.title,
+//       description: post.description,
+//     },
+//   };
+// }
 
 export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

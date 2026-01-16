@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Post } from "@/lib/blog"; // You might need to check where Post type is defined
 import Link from "next/link";
 import { ArrowLeft, Clock, User, UserCircle2, Hash } from "lucide-react";
@@ -19,6 +19,15 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 200]);
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+
+  // Dynamically set page title and meta tags
+  useEffect(() => {
+    document.title = `${post.title} | Garry-9xxxxxx 博客`;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', post.description || '');
+    }
+  }, [post.title, post.description]);
 
   // Use cover image or fallback
   const coverImage = post.coverImage || "/seed-assets/blog_future_city.png"; // Default fallback if none
