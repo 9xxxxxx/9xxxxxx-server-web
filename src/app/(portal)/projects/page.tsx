@@ -10,7 +10,8 @@ export const metadata = {
 export const revalidate = 60;
 
 export default async function ProjectsPage() {
-  const projects = await getAllProjects();
+  // Removed DB query to avoid build-time dependency
+  const projects: any[] = [];
 
   return (
     <div className="min-h-screen pt-24 px-6 max-w-7xl mx-auto pb-16">
