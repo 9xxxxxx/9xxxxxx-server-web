@@ -12,8 +12,8 @@ export const revalidate = 60;
 export default async function Home() {
   // Removed DB queries to avoid build-time dependency
   // Data will be loaded at runtime
-  const projects = [];
-  const allPosts = [];
+  const projects: any[] = [];
+  const allPosts: any[] = [];
   const recentPosts = allPosts.slice(0, 3);
   const featuredProjects = projects.slice(0, 3);
 
@@ -53,7 +53,7 @@ export default async function Home() {
                             
                             {/* Tech Stack Pills for Home */}
                             <div className="mt-auto flex flex-wrap gap-2 pt-6 border-t border-slate-50">
-                                {project.techStack.slice(0, 3).map(tech => (
+                                {project.techStack.slice(0, 3).map((tech: string) => (
                                     <span key={tech} className="px-3 py-1 bg-slate-50 text-slate-500 text-xs font-semibold rounded-full">
                                         {tech}
                                     </span>
