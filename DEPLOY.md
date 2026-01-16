@@ -1,84 +1,83 @@
-# Deployment Guide (Volcengine / Linux)
+# Docker Deployment Guide (Recommended)
 
-This guide assumes you are deploying to a Linux server (e.g., Ubuntu) on Volcengine (火山引擎).
+This guide uses **Docker Compose** to run the entire stack (Next.js App + PostgreSQL + Redis) in containers. This is the most stable and reproducible way to deploy.
 
 ## Prerequisites
 
-On your server, ensure you have:
+On your Volcengine (Linux) server:
 
-1.  **Node.js 18+** installed.
-2.  **Git** installed.
-3.  **PostgreSQL** database (can be on the same server or a managed RDS).
-4.  **PM2** (process manager) installed: `npm install -g pm2`.
-5.  **Nginx** (optional, for domain mapping).
+1.  **Docker** installed.
+2.  **Docker Compose** installed.
+3.  **Git** installed.
 
-## 1. Prepare your Database
+## 1. Setup
 
-Ensure your `.env` file on the server points to the correct database.
+1.  **Clone the repository**:
 
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/website?schema=public"
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="http://your-domain.com"
-RESEND_API_KEY="re_..."
-```
+    ```bash
+    git clone https://github.com/9xxxxxx/9xxxxxx-server-web.git
+    cd 9xxxxxx-server-web
+    ```
 
-## 2. Get the Code
+2.  **Configure Environment**:
+    Create a `.env` file in the project root.
+    ```bash
+    cp .env.example .env
+    nano .env
+    ```
+    **Critical**: Ensure `DATABASE_URL` points to the docker service name `db` if using the internal database:
+    ```env
+    DATABASE_URL="postgresql://postgres:password@db:5432/website?schema=public"
+    REDIS_URL="redis://redis:6379"
+    NEXTAUTH_URL="http://your-server-ip-or-domain"
+    NEXTAUTH_SECRET="...your secret..."
+    ```
 
-Clone your repository to the server:
+## 2. Start Services
 
-```bash
-git clone <your-repo-url>
-cd <project-folder>
-```
-
-## 3. Install & Build
-
-Run the following commands on the server:
-
-```bash
-# Install dependencies
-npm install
-
-# Generate Database Client
-npx prisma generate
-
-# Update Database Schema (if needed)
-npx prisma db push
-
-# Build the application
-npm run build
-```
-
-## 4. Start with PM2
-
-Use PM2 to keep your app running in the background:
+Run the application in the background:
 
 ```bash
-pm2 start npm --name "website" -- start
+docker-compose up -d --build
 ```
 
-## 5. Verify
+- This command will:
+  - Build the Next.js app image (using `Dockerfile`).
+  - Start PostgreSQL.
+  - Start Redis.
+  - Connect them all together.
 
-Your app should be running on `http://localhost:3000`.
-Use `pm2 logs` to check for errors.
+## 3. Verify
 
-## 6. Nginx Proxy (Recommended)
+- Check status: `docker-compose ps`
+- View logs: `docker-compose logs -f app`
+- Access site: `http://your-server-ip:3000`
 
-If you want to access via a domain on port 80/443:
+## 4. Maintenance
 
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
+### How to Update
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
+When you have pushed new code to GitHub:
+
+```bash
+# 1. Pull latest code
+git pull origin main
+
+# 2. Rebuild and restart (Zero-downtime-ish)
+docker-compose up -d --build
 ```
+
+### Database Management
+
+To run Prisma migrations manually inside the container:
+
+```bash
+docker-compose exec app npx prisma db push
+```
+
+## 5. Troubleshooting
+
+If the build fails due to network issues (GFW) in China:
+
+- The `Dockerfile` uses `node:20-alpine`, which usually works fine.
+- If `npm install` fails, you might need to configure a registry mirror in the Dockerfile (not usually necessary for Alpine in Volcengine).
