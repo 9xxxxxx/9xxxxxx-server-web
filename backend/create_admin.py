@@ -9,7 +9,7 @@ def create_admin_user():
     
     with Session(engine) as session:
         # Check if admin already exists
-        statement = select(User).where(User.email == "admin@example.com")
+        statement = select(User).where(User.email == "huangqiannb@gmail.com")
         existing_user = session.exec(statement).first()
         
         if existing_user:
@@ -17,17 +17,17 @@ def create_admin_user():
             return
 
         # Create new admin user
-        hashed_pwd = get_password_hash("admin123")
+        hashed_pwd = get_password_hash("wdnmdadmin")
         admin_user = User(
-            email="admin@example.com",
+            email="huangqiannb@gmail.com",
             password=hashed_pwd,
             name="Admin User"
         )
         session.add(admin_user)
         session.commit()
         print("Admin user created successfully!")
-        print("Email: admin@example.com")
-        print("Password: admin123")
+        print("Email: huangqiannb@gmail.com")
+        print("Password: wdnmdadmin")
 
 if __name__ == "__main__":
     create_admin_user()

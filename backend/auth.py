@@ -7,17 +7,13 @@ from sqlmodel import Session, select
 from database import get_session
 from models import User
 
-# Configuration
-SECRET_KEY = "CHANGE_THIS_IN_PRODUCTION_SECRET_KEY" # In real prod, read from env
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 1 day
-
+import os
 import bcrypt
 
-# ... (imports)
-SECRET_KEY = "CHANGE_THIS_IN_PRODUCTION_SECRET_KEY"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
+# Configuration
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_IN_PRODUCTION_SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 24))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
 

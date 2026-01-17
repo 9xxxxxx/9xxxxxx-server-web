@@ -77,9 +77,11 @@ logs/
 GEMINI.md
 IFLOW.md
 
-# Build artifacts
+# Build and Deploy artifacts
 build*.log
-deploy*.tar.gz
+*.tar.gz
+backend.pid
+backend.log
 
 # Backend / Python
 __pycache__/
@@ -99,7 +101,7 @@ backend/database.db
 
 # UV
 # We prefer to commit uv.lock to ensure reproducible builds
-# .uv/
+.uv/
 
 # Uploaded files
 backend/static/uploads/
