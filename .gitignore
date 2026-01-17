@@ -61,6 +61,12 @@ Thumbs.db
 # Logs
 *.log
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+build*.log
+backend.log
 
 # Cache
 .cache/
@@ -78,10 +84,11 @@ GEMINI.md
 IFLOW.md
 
 # Build and Deploy artifacts
-build*.log
 *.tar.gz
+*.zip
+*.rar
+*.7z
 backend.pid
-backend.log
 
 # Backend / Python
 __pycache__/

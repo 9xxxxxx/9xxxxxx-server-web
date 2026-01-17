@@ -84,6 +84,28 @@ uv run python create_admin.py
 - 📡 API: http://localhost:8000
 - 🔧 管理后台: http://localhost:3000/admin
 
+## 🚢 部署
+
+项目包含自动化部署脚本，用于同步代码到远程服务器并重启服务。
+
+### 自动化部署 (推荐)
+
+- **Windows (PowerShell):**
+  ```powershell
+  ./deploy.ps1
+  ```
+- **Linux/macOS:**
+  ```bash
+  chmod +x deploy.sh
+  ./deploy.sh
+  ```
+
+### 手动构建
+
+1. **前端构建:** `npm run build` (生成 `out/` 目录)
+2. **后端同步:** 确保服务器安装了 `uv` 并在 `backend` 目录下运行 `uv sync`
+3. **进程管理:** 后端通常通过 `uvicorn` 运行，并由 Nginx 进行反向代理。
+
 ## 🔧 环境变量
 
 创建 `.env` 文件:
