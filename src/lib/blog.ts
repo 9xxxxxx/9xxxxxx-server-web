@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { fetchAPI } from "@/lib/api-client";
 
 export type Post = {
   id?: string;
@@ -9,9 +9,10 @@ export type Post = {
   content: string;
   readingTime?: number;
   createdAt?: Date;
-  category?: string;
+  category: string; // Made required as backend provides default
   coverImage?: string | null;
   likes?: number;
+  published: boolean;
   author?: {
     name: string | null;
     email: string | null;
@@ -20,101 +21,46 @@ export type Post = {
 
 // Get all published posts, optionally filtered by category
 export async function getAllPosts(category?: string): Promise<Post[]> {
-  const whereClause: any = { published: true };
-  if (category && category !== "All") {
-    whereClause.category = category;
-  }
-
-  const posts = await prisma.post.findMany({
-    where: whereClause,
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: {
-        select: { name: true, email: true },
-      },
-    },
-  });
-
+  const query = category && category !== "All" ? `?category=${category}` : "";
+  const posts = await fetchAPI<Post[]>(`/api/posts${query}`);
   return posts.map(transformPost);
 }
 
 // Get single post
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const post = await prisma.post.findUnique({
-    where: { slug },
-    include: {
-      author: {
-        select: { name: true, email: true },
-      },
-    },
-  });
-
-  if (!post || !post.published) return null;
-
-  return transformPost(post);
+  try {
+    const post = await fetchAPI<Post>(`/api/posts/${slug}`);
+    return transformPost(post);
+  } catch (error) {
+    return null;
+  }
 }
 
 export async function getAllCategories(): Promise<string[]> {
-  const posts = await prisma.post.findMany({
-    where: { published: true },
-    select: { category: true },
-    distinct: ['category']
-  });
-  
-  // Return unique categories, filter out nulls if any
-  return posts.map(p => p.category).filter(Boolean) as string[];
+  return await fetchAPI<string[]>("/api/posts/categories");
 }
 
 // 获取所有唯一标签
 export async function getAllTags(): Promise<string[]> {
-  const posts = await prisma.post.findMany({
-    where: { published: true },
-    select: { tags: true },
-  });
-
-  const tags = new Set<string>();
-  posts.forEach((post) => {
-    post.tags.forEach((tag) => tags.add(tag));
-  });
-  
-  return Array.from(tags).sort();
+  return await fetchAPI<string[]>("/api/posts/tags");
 }
 
 // 根据标签筛选文章
 export async function getPostsByTag(tag: string): Promise<Post[]> {
-  const posts = await prisma.post.findMany({
-    where: {
-      published: true,
-      tags: { has: tag },
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: { select: { name: true, email: true } },
-    },
-  });
-
+  const posts = await fetchAPI<Post[]>(`/api/posts?tag=${encodeURIComponent(tag)}`);
   return posts.map(transformPost);
 }
 
-// 转换 Prisma 数据到前端通用格式
+// 转换 API 数据到前端通用格式 (Date handling)
 function transformPost(post: any): Post {
   return {
-    id: post.id,
-    slug: post.slug,
-    title: post.title,
-    description: post.description,
-    tags: post.tags,
-    content: post.content,
-    createdAt: post.createdAt,
-    author: post.author,
-    readingTime: calculateReadingTime(post.content),
-    category: post.category || "Tech",
-    coverImage: post.coverImage,
-    likes: post.likes || 0,
+    ...post,
+    createdAt: post.createdAt ? new Date(post.createdAt) : undefined,
+    readingTime: calculateReadingTime(post.content || ""),
   };
 }
 
-// 搜索文章 (标题、描述、内容)
+// 搜索文章 (标题、描述、内容) - Client side filtering is often fine for small SSG blogs
 export function searchPosts(posts: Post[], query: string): Post[] {
   const lowerQuery = query.toLowerCase();
   
@@ -136,28 +82,12 @@ export function calculateReadingTime(content: string): number {
   return minutes;
 }
 
-// 获取相关文章 (基于标签相似度)
+// 获取相关文章 (基于 API)
 export async function getRelatedPosts(slug: string, limit: number = 3): Promise<Post[]> {
-  const currentPost = await getPostBySlug(slug);
-  if (!currentPost) return [];
-
-  const allPosts = await getAllPosts();
-  const otherPosts = allPosts.filter((post) => post.slug !== slug);
-  
-  // 计算标签重叠度
-  const postsWithScore = otherPosts.map((post) => {
-    const commonTags = post.tags.filter((tag) =>
-      currentPost.tags.includes(tag)
-    );
-    return {
-      post,
-      score: commonTags.length,
-    };
-  });
-
-  // 按分数排序并返回前 N 个
-  return postsWithScore
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map((item) => item.post);
+  try {
+    const posts = await fetchAPI<Post[]>(`/api/posts/${slug}/related?limit=${limit}`);
+    return posts.map(transformPost);
+  } catch (error) {
+    return [];
+  }
 }

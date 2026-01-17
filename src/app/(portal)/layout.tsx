@@ -1,21 +1,15 @@
 import { Navbar } from "@/components/Navbar";
-// Removed getSiteConfig to avoid build-time DB dependency
-// import { getSiteConfig } from "@/lib/site-config";
+import { getSiteConfig } from "@/lib/site-config";
 
-// User said "don't split screen".
-// Let's keep SocialSidebar for now as it's nice, but remove RightNav.
+export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function PortalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Use default config instead of querying DB at build time
-  const config = {
-    ownerName: "Garry",
-    avatarInitial: "G",
-    avatarGradient: "from-blue-600 to-indigo-600",
-  };
+  // Fetch config dynamically with revalidation
+  const config = await getSiteConfig();
 
   return (
     <div className="min-h-screen bg-transparent text-foreground selection:bg-primary/20">

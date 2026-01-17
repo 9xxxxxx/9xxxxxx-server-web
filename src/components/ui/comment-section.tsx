@@ -26,12 +26,26 @@ export function CommentSection({ projectId, postId }: CommentSectionProps) {
 
   const fetchComments = async () => {
     try {
-      const query = projectId ? `projectId=${projectId}` : `postId=${postId}`;
-      const res = await fetch(`/api/comments?${query}`);
+      const slug = projectId || postId;
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const res = await fetch(`${apiUrl}/api/comments/${slug}`);
+      
+      if (!res.ok) {
+        // Comments might not be implemented yet, that's OK
+        setComments([]);
+        return;
+      }
+      
       const data = await res.json();
       setComments(data.comments || []);
     } catch (error) {
-      console.error("Failed to load comments");
+      // Silently fail - comments are optional
+      setComments([]);
     } finally {
       setLoading(false);
     }
@@ -47,20 +61,20 @@ export function CommentSection({ projectId, postId }: CommentSectionProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/comments", {
+      const slug = projectId || postId;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const res = await fetch(`${apiUrl}/api/comments/${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: newComment,
           guestName: guestName || "访客",
-          projectId,
-          postId,
         }),
       });
 
       if (res.ok) {
         setNewComment("");
-        fetchComments(); // Reload to get new comment
+        fetchComments();
       }
     } catch (error) {
       console.error("Failed to post comment");

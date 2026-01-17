@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 
 import { FileText, FolderKanban, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchAPI } from "@/lib/api-client";
 
 interface SearchResult {
   type: "Blog" | "Project";
@@ -56,9 +57,6 @@ export function CommandMenu() {
 
     document.addEventListener("keydown", down);
     document.addEventListener("open-command-menu", openHandler);
-    
-    // Prefetch data when mounted to be instant
-    fetchData();
 
     return () => {
       document.removeEventListener("keydown", down);
@@ -66,11 +64,10 @@ export function CommandMenu() {
     };
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (query: string = "") => {
     try {
         setLoading(true);
-        const res = await fetch("/api/search");
-        const json = await res.json();
+        const json = await fetchAPI<SearchResult[]>(`/api/search?q=${encodeURIComponent(query)}`);
         if(Array.isArray(json)) {
             setData(json);
         }
@@ -80,6 +77,21 @@ export function CommandMenu() {
         setLoading(false);
     }
   }
+
+  // Debounced search effect
+  React.useEffect(() => {
+    if (!open) return;
+    
+    const timeout = setTimeout(() => {
+      if (search.trim()) {
+        fetchData(search.trim());
+      } else {
+        setData([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [search, open]);
 
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);

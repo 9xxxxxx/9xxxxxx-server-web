@@ -2,10 +2,10 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, getAssetUrl } from "@/lib/utils";
 import { ModeToggle } from "@/components/ThemeToggle";
 import { motion } from "framer-motion";
-import { House, FolderKanban, BookOpen, Sparkles, User, Settings, Search } from "lucide-react";
+import { House, FolderKanban, BookOpen, Sparkles, User, Settings, Search, Github } from "lucide-react";
 
 interface NavbarProps {
   config?: {
@@ -47,7 +47,7 @@ export function Navbar({ config }: NavbarProps) {
         <Link href="/" className="flex items-center gap-4 pl-2 group">
           {avatarImage ? (
              <img 
-               src={avatarImage} 
+               src={getAssetUrl(avatarImage)} 
                alt={ownerName} 
                className="w-12 h-12 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-300 border-2 border-white/50"
              />
@@ -99,7 +99,7 @@ export function Navbar({ config }: NavbarProps) {
         {/* Actions (Right) */}
         <div className="flex items-center gap-2 pr-2">
              <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all group" aria-label="GitHub">
-                <i className="fa-brands fa-github text-xl"></i>
+                <Github className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
              </a>
              <button 
                 onClick={() => document.dispatchEvent(new CustomEvent("open-command-menu"))}
@@ -108,7 +108,7 @@ export function Navbar({ config }: NavbarProps) {
              >
                 <Search className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
              </button>
-             <Link href="/dashboard" className="p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all group" aria-label="Dashboard">
+             <Link href="/admin" className="p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all group" aria-label="Dashboard">
                 <Settings className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
              </Link>
              <div className="w-px h-6 bg-slate-200 mx-2" />

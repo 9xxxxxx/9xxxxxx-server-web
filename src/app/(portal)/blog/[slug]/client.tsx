@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Clock, User, UserCircle2, Hash } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getAssetUrl } from "@/lib/utils";
 import { LikeButton } from "@/components/ui/like-button";
 import { CommentSection } from "@/components/ui/comment-section";
 
@@ -30,7 +30,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
   }, [post.title, post.description]);
 
   // Use cover image or fallback
-  const coverImage = post.coverImage || "/seed-assets/blog_future_city.png"; // Default fallback if none
+  const coverImage = post.coverImage ? getAssetUrl(post.coverImage) : "/seed-assets/blog_future_city.png"; // Default fallback if none
 
   return (
     <article className="min-h-screen bg-background text-foreground relative -mt-20">
@@ -146,7 +146,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                            {/* Fallback image for related posts */}
                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-slate-800 dark:to-slate-900" />
                            {relatedPost.coverImage && (
-                               <img src={relatedPost.coverImage} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 relative z-10" />
+                               <img src={getAssetUrl(relatedPost.coverImage)} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 relative z-10" />
                            )}
                            <div className="absolute top-4 left-4">
                                 <span className="bg-white/90 backdrop-blur px-2 py-1 rounded-md text-xs font-bold uppercase">{relatedPost.category}</span>

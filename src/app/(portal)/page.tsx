@@ -5,15 +5,16 @@ import { Projects } from "@/components/Projects"; // We might want a simplified 
 
 import Link from "next/link";
 import { ArrowRight, Calendar } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getAssetUrl } from "@/lib/utils";
 
 export const revalidate = 60;
 
 export default async function Home() {
   // Removed DB queries to avoid build-time dependency
   // Data will be loaded at runtime
-  const projects: any[] = [];
-  const allPosts: any[] = [];
+  // Data will be loaded at runtime
+  const projects = await getAllProjects();
+  const allPosts = await getAllPosts();
   const recentPosts = allPosts.slice(0, 3);
   const featuredProjects = projects.slice(0, 3);
 
@@ -37,7 +38,7 @@ export default async function Home() {
                     <div className="bg-white rounded-[2rem] overflow-hidden h-full shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-slate-100 relative">
                         <div className="h-64 overflow-hidden relative">
                             <img 
-                                src={project.image} 
+                                src={getAssetUrl(project.image)} 
                                 alt={project.title} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                             />
@@ -87,7 +88,7 @@ export default async function Home() {
                         {post.coverImage && (
                             <div className="h-48 overflow-hidden relative w-full">
                                 <img 
-                                    src={post.coverImage} 
+                                    src={getAssetUrl(post.coverImage)} 
                                     alt={post.title} 
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                                 />

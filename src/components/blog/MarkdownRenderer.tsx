@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import ReactMarkdown from "react-markdown";
+import { getAssetUrl } from "@/lib/utils";
 
 interface MarkdownRendererProps {
   content: string;
@@ -31,6 +32,9 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             </code>
           );
         },
+        img: ({ node, ...props }: any) => {
+            return <img {...props} src={getAssetUrl(props.src)} className="rounded-2xl shadow-lg my-8 w-full object-cover" />;
+        }
       }}
     >
       {content}

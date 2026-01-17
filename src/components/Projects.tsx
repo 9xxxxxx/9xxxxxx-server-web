@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, getAssetUrl } from "@/lib/utils";
 import { FilterRow } from "@/components/ui/filter-row";
 import { Project } from "@/lib/projects";
 
@@ -63,7 +63,7 @@ export function Projects({ projects }: ProjectsProps) {
                    
                    <div className="h-64 overflow-hidden relative">
                         <img 
-                          src={item.image} 
+                          src={getAssetUrl(item.image)} 
                           alt={item.title}
                           referrerPolicy="no-referrer"
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 

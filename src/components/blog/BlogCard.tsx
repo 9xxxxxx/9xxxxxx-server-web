@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Post } from "@/lib/blog";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getAssetUrl } from "@/lib/utils";
 import { ArrowRight, Clock } from "lucide-react";
 
 interface BlogCardProps {
@@ -20,7 +20,7 @@ export function BlogCard({ post }: BlogCardProps) {
         {/* Placeholder Gradient or Cover Image */}
         {post.coverImage ? (
              <img 
-               src={post.coverImage} 
+               src={getAssetUrl(post.coverImage)} 
                alt={post.title} 
                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
              />

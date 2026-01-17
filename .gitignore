@@ -73,13 +73,33 @@ logs/
 # Agent/AI tools
 .agent/
 .shared/
-.github/
-
-
-# Documentation (keep only essential docs)
+# Documentation
 GEMINI.md
 IFLOW.md
 
 # Build artifacts
 build*.log
 deploy*.tar.gz
+
+# Backend / Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+backend/.venv/
+venv/
+ENV/
+env/
+
+# Database
+*.db
+*.sqlite3
+backend/database.db
+
+# UV
+# We prefer to commit uv.lock to ensure reproducible builds
+# .uv/
+
+# Uploaded files
+backend/static/uploads/
