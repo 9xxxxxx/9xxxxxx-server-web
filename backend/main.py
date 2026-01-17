@@ -21,7 +21,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "*" # Relaxed for now
+    "http://115.191.9.139",      # Production Frontend (Nginx/Default)
+    "http://115.191.9.139:3000", # Production Frontend (Direct Port)
 ]
 
 app.add_middleware(
