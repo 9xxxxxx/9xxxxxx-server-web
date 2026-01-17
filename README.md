@@ -55,14 +55,15 @@
 
 ### 安装与运行
 
-**1. 前端**
+**1. 前端 (Next.js - SSG 模式)**
 
 ```bash
 npm install
-npm run dev
+npm run build
+# 导出的文件将位于 out/ 目录
 ```
 
-**2. 后端**
+**2. 后端 (FastAPI)**
 
 ```bash
 cd backend

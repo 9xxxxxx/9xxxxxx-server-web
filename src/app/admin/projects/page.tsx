@@ -52,7 +52,7 @@ export default function AdminProjectsPage() {
            <p className="text-slate-500 font-medium">Showcase your best work.</p>
         </div>
         <Link 
-            href="/admin/projects/new" 
+            href="/admin/projects/editor" 
             className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-200"
         >
             <Plus className="w-5 h-5" /> New Project
@@ -110,7 +110,7 @@ export default function AdminProjectsPage() {
                                 <Link href={`/projects/${project.slug}`} target="_blank" className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="View">
                                 <Eye className="w-5 h-5" />
                                 </Link>
-                                <Link href={`/admin/projects/${project.id}`} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="Edit">
+                                <Link href={`/admin/projects/editor?id=${project.id}`} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="Edit">
                                     <Edit className="w-5 h-5" />
                                 </Link>
                                 <button onClick={() => handleDelete(project.id!)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
@@ -136,7 +136,7 @@ export default function AdminProjectsPage() {
                          
                           {/* Mobile Actions */}
                           <div className="flex sm:hidden items-center gap-2 mt-4 pt-4 border-t border-slate-50">
-                                <Link href={`/admin/projects/${project.id}`} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Edit</Link>
+                                <Link href={`/admin/projects/editor?id=${project.id}`} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Edit</Link>
                                 <button onClick={() => handleDelete(project.id!)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Delete</button>
                             </div>
                     </div>

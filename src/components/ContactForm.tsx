@@ -1,10 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import { sendEmail } from "@/app/actions";
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { Send, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { fetchAPI } from "@/lib/api-client";
 
 const initialState = {
   success: false,
@@ -12,39 +10,44 @@ const initialState = {
   fieldErrors: {},
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed group shadow-lg shadow-indigo-200 dark:shadow-none"
-    >
-      {pending ? (
-        <>
-          <Loader2 className="w-5 h-5 animate-spin" />
-          Sending...
-        </>
-      ) : (
-        <>
-          Send Message
-          <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-        </>
-      )}
-    </button>
-  );
-}
-
 export function ContactForm() {
-  const [state, formAction] = useActionState(sendEmail, initialState);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ success: false, error: "" });
 
-  useEffect(() => {
-    if (state.success && formRef.current) {
-      formRef.current.reset();
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus({ success: false, error: "" });
+
+    try {
+      const res = await fetchAPI<any>("/api/site-config/contact", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
+
+      if (res.success) {
+        setStatus({ success: true, error: "" });
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        setStatus({ success: false, error: res.error || "Failed to send message." });
+      }
+    } catch (err) {
+      console.error("Contact error:", err);
+      setStatus({ success: false, error: "Something went wrong. Please try again." });
+    } finally {
+      setLoading(false);
     }
-  }, [state.success]);
+  };
 
   return (
     <section className="py-24 relative overflow-hidden">
@@ -59,7 +62,7 @@ export function ContactForm() {
         </div>
 
         <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-white/50 dark:border-slate-800 rounded-[2.5rem] p-8 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)]">
-          <form ref={formRef} action={formAction} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             
             {/* Name & Email Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -71,15 +74,12 @@ export function ContactForm() {
                   type="text"
                   id="name"
                   name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   placeholder="John Doe"
                   required
                   className="w-full px-6 py-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
                 />
-                {state.fieldErrors?.name && (
-                  <p className="text-red-500 text-xs ml-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> {state.fieldErrors.name[0]}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -90,15 +90,12 @@ export function ContactForm() {
                   type="email"
                   id="email"
                   name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="john@example.com"
                   required
                   className="w-full px-6 py-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
                 />
-                {state.fieldErrors?.email && (
-                  <p className="text-red-500 text-xs ml-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> {state.fieldErrors.email[0]}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -111,15 +108,12 @@ export function ContactForm() {
                 type="text"
                 id="subject"
                 name="subject"
+                value={formData.subject}
+                onChange={handleChange}
                 placeholder="Project Inquiry..."
                 required
                 className="w-full px-6 py-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
               />
-              {state.fieldErrors?.subject && (
-                <p className="text-red-500 text-xs ml-1 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> {state.fieldErrors.subject[0]}
-                </p>
-              )}
             </div>
 
             {/* Message */}
@@ -131,33 +125,46 @@ export function ContactForm() {
                 id="message"
                 name="message"
                 rows={5}
+                value={formData.message}
+                onChange={handleChange}
                 placeholder="Tell me about your project..."
                 required
                 className="w-full px-6 py-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 resize-none"
               />
-              {state.fieldErrors?.message && (
-                <p className="text-red-500 text-xs ml-1 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> {state.fieldErrors.message[0]}
-                </p>
-              )}
             </div>
 
             {/* Status Messages */}
-            {state.error && (
+            {status.error && (
                 <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 shrink-0" />
-                    {state.error}
+                    {status.error}
                 </div>
             )}
 
-            {state.success && (
+            {status.success && (
                 <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
                     <CheckCircle2 className="w-5 h-5 shrink-0" />
                     Message sent successfully! I'll be in touch soon.
                 </div>
             )}
 
-            <SubmitButton />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed group shadow-lg shadow-indigo-200 dark:shadow-none"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  Send Message
+                  <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
           </form>
         </div>
       </div>

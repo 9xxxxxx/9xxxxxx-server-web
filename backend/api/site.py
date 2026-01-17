@@ -3,7 +3,17 @@ from sqlmodel import Session, select
 from database import get_session
 from models import SiteConfig
 
+from pydantic import BaseModel, EmailStr
+import httpx
+import os
+
 router = APIRouter()
+
+class ContactMessage(BaseModel):
+    name: str
+    email: EmailStr
+    subject: str
+    message: str
 
 @router.get("/", response_model=SiteConfig)
 def get_site_config(session: Session = Depends(get_session)):
@@ -46,3 +56,35 @@ def update_site_config(
     session.commit()
     session.refresh(config)
     return config
+
+@router.post("/contact")
+async def send_contact_email(msg: ContactMessage):
+    api_key = os.getenv("RESEND_API_KEY")
+    if not api_key:
+        return {"success": False, "error": "Email service not configured"}
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "from": "Portfolio Contact <onboarding@resend.dev>",
+                    "to": ["huangqiannb@gmail.com"],
+                    "subject": f"[Portfolio] {msg.subject}",
+                    "reply_to": msg.email,
+                    "text": f"Name: {msg.name}\nEmail: {msg.email}\n\nMessage:\n{msg.message}"
+                }
+            )
+            
+            if response.status_code != 200:
+                print(f"Resend error: {response.text}")
+                return {"success": False, "error": "Failed to send email"}
+                
+            return {"success": True}
+        except Exception as e:
+            print(f"Contact email exception: {str(e)}")
+            return {"success": False, "error": str(e)}

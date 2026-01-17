@@ -6,7 +6,7 @@ export const metadata = {
   description: "Explore my latest projects and experiments.",
 };
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function ProjectsPage() {
   const projects = await getAllProjects();

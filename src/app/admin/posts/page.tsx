@@ -52,7 +52,7 @@ export default function AdminPostsPage() {
            <p className="text-slate-500 font-medium">Manage and organize your articles.</p>
         </div>
         <Link 
-            href="/admin/posts/new" 
+            href="/admin/posts/editor" 
             className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
         >
             <Plus className="w-5 h-5" /> Create Post
@@ -111,7 +111,7 @@ export default function AdminPostsPage() {
                                 <Link href={`/blog/${post.slug}`} target="_blank" className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="View">
                                     <Eye className="w-5 h-5" />
                                 </Link>
-                                <Link href={`/admin/posts/${post.id}`} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="Edit">
+                                <Link href={`/admin/posts/editor?id=${post.id}`} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="Edit">
                                     <Edit className="w-5 h-5" />
                                 </Link>
                                 <button onClick={() => handleDelete(post.id!)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
@@ -128,7 +128,7 @@ export default function AdminPostsPage() {
                             
                             {/* Mobile Actions */}
                             <div className="flex sm:hidden items-center gap-2 mt-2">
-                                <Link href={`/admin/posts/${post.id}`} className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg">Edit</Link>
+                                <Link href={`/admin/posts/editor?id=${post.id}`} className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg">Edit</Link>
                                 <button onClick={() => handleDelete(post.id!)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg">Delete</button>
                             </div>
                         </div>

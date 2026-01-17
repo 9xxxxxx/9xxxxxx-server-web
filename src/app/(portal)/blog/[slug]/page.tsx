@@ -4,13 +4,13 @@ import BlogPostClient from "./client";
 
 export const revalidate = 60;
 
-// Generate static params (SSG) - Disabled for deployment without build-time DB access
-// export async function generateStaticParams() {
-//   const posts = await getAllPosts();
-//   return posts.map((post) => ({
-//     slug: post.slug,
-//   }));
-// }
+// Generate static params (SSG)
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
 
 // Metadata generation disabled for build-time DB independence
 // Metadata will be set dynamically at runtime via next/head or in the client component

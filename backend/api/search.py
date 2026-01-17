@@ -14,7 +14,7 @@ class SearchResult(BaseModel):
     url: str
     category: str
 
-@router.get("/", response_model=List[SearchResult])
+@router.get("", response_model=List[SearchResult])
 def search(q: str = "", session: Session = Depends(get_session)):
     if not q:
         return []

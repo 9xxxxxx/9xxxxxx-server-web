@@ -3,13 +3,13 @@ import { getAllProjects, getProjectBySlug, getRelatedProjects } from "@/lib/proj
 import { notFound } from "next/navigation";
 import ProjectPageClient from "./client";
 
-// Generate static params (SSG) - Disabled for deployment without build-time DB access
-// export async function generateStaticParams() {
-//   const projects = await getAllProjects();
-//   return projects.map((project) => ({
-//     slug: project.slug,
-//   }));
-// }
+// Generate static params (SSG)
+export async function generateStaticParams() {
+  const projects = await getAllProjects();
+  return projects.map((project) => ({
+    slug: project.slug,
+  }));
+}
 
 // Page Component (Server Component)
 export default async function ProjectPage({
