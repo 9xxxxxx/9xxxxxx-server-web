@@ -101,6 +101,24 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 | `/api/auth/login` | POST | 管理员登录   |
 | `/api/upload`     | POST | 上传图片     |
 
+## 📧 邮件服务 (Resend)
+
+项目集成了 [Resend](https://resend.com) 用于联系表单的邮件发送功能。
+
+### 配置
+
+在 `.env` 中添加:
+
+```env
+RESEND_API_KEY=your_resend_api_key
+```
+
+### 功能
+
+- 联系表单提交后自动发送邮件通知
+- 支持表单验证
+- 使用 Next.js Server Actions
+
 ## 📄 许可证
 
 MIT License
