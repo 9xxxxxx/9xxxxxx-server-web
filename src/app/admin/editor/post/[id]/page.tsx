@@ -10,6 +10,7 @@ import Link from "next/link";
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from "sonner";
 import { getAssetUrl } from "@/lib/utils";
+import ImageCropper from "@/components/admin/ImageCropper";
 import {
   Sheet,
   SheetContent,
@@ -43,6 +44,10 @@ export default function PostEditorPage({ params }: EditorPageProps) {
   const [tags, setTags] = useState("");
   const [description, setDescription] = useState("");
   const [coverImage, setCoverImage] = useState("");
+
+  // Image Cropping
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
 
   useEffect(() => {
     if (!accessToken) {
@@ -159,30 +164,40 @@ export default function PostEditorPage({ params }: EditorPageProps) {
     }
   };
   
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (!file) return;
+      if (file) {
+          const objectUrl = URL.createObjectURL(file);
+          setTempImageUrl(objectUrl);
+          setShowCropper(true);
+      }
+  };
 
+  const handleCropComplete = async (croppedUrl: string) => {
       const toastId = toast.loading("上传封面中...");
-
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/upload", {
-            method: "POST",
-            headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-            body: formData,
-          }
-        );
-
-        if (!res.ok) throw new Error("Upload failed");
-        const data = await res.json();
-        setCoverImage(data.url);
-        toast.success("上传成功", { id: toastId });
-      } catch (error) {
-          console.error(error);
-          toast.error("上传失败", { id: toastId });
+         const blobRes = await fetch(croppedUrl);
+         const blob = await blobRes.blob();
+         
+         const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+         const formData = new FormData();
+         formData.append("file", file);
+         
+         const res = await fetch("/api/upload", {
+             method: "POST",
+             headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+             body: formData
+         });
+         
+         if (!res.ok) throw new Error("Upload failed");
+         
+         const data = await res.json();
+         setCoverImage(data.url);
+         setShowCropper(false);
+         toast.success("上传成功", { id: toastId });
+      } catch(e) {
+          console.error(e);
+          toast.error("封面图上传失败", { id: toastId });
       }
   };
 
@@ -366,6 +381,16 @@ export default function PostEditorPage({ params }: EditorPageProps) {
             />
         )}
       </main>
+
+      {/* Image Cropper */}
+      {showCropper && tempImageUrl && (
+          <ImageCropper 
+            imageSrc={tempImageUrl} 
+            onComplete={handleCropComplete} 
+            onCancel={() => { setShowCropper(false); setTempImageUrl(null); }}
+            aspect={16/9}
+          />
+      )}
     </div>
   );
 }

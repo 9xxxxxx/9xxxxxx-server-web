@@ -9,11 +9,16 @@ router = APIRouter()
 @router.get("/", response_model=List[Project])
 def get_projects(
     session: Session = Depends(get_session),
-    include_login_required: bool = False  # 管理员请求时传 True
+    include_login_required: bool = False,  # 管理员请求时传 True
+    include_unpublished: bool = False      # 新增参数: 是否包含未发布项目
 ):
-    query = select(Project).where(Project.published == True).order_by(Project.createdAt.desc())
+    query = select(Project).order_by(Project.createdAt.desc())
+
+    # 权限过滤
+    if not include_unpublished:
+        query = query.where(Project.published == True)
     
-    # 权限过滤: 默认只返回公开内容
+    # 默认只返回公开内容 (除非请求包含登录可见)
     if not include_login_required:
         query = query.where(Project.visibility == "public")
     

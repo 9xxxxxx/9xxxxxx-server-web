@@ -32,8 +32,8 @@ export default function AdminProjectsPage() {
 
   async function loadProjects() {
     try {
-      // 获取所有项目,包括需登录的
-      const data = await fetchAPI<Project[]>("/api/projects?include_login_required=true");
+      // 获取所有项目,包括需登录的,包含未发布
+      const data = await fetchAPI<Project[]>("/api/projects?include_login_required=true&include_unpublished=true");
       setProjects(data);
     } catch (error) {
       console.error(error);
