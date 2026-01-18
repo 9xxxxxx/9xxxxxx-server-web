@@ -111,9 +111,7 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
             visibility,
         };
 
-        const url = isNew ? 
-          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/projects/` : 
-          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/projects/${projectId}`;
+        const url = isNew ? "/api/projects/" : `/api/projects/${projectId}`;
         const method = isNew ? "POST" : "PUT";
         
         await fetchAPI(url, { method, body: JSON.stringify(payload) });

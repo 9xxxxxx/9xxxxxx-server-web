@@ -123,9 +123,7 @@ export default function PostEditorPage({ params }: EditorPageProps) {
         coverImage,
       };
 
-      const url = isNew ? 
-          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/posts/` : 
-          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/posts/${postId}`;
+      const url = isNew ? "/api/posts/" : `/api/posts/${postId}`;
       
       const method = isNew ? "POST" : "PUT";
 
