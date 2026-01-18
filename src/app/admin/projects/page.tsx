@@ -7,6 +7,18 @@ import { Plus, Edit, Trash2, ExternalLink, Search, Github, Briefcase, Eye } from
 import { Project } from "@/lib/projects";
 import { useRouter } from "next/navigation";
 import { getAssetUrl } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -25,18 +37,19 @@ export default function AdminProjectsPage() {
       setProjects(data);
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this project?")) return;
     try {
       await fetchAPI(`/api/projects/${id}`, { method: "DELETE" });
       setProjects(projects.filter(p => p.id !== id));
+      toast.success("Project deleted successfully");
     } catch (error) {
-      alert("Failed to delete project");
+      toast.error("Failed to delete project");
     }
   }
 
@@ -116,9 +129,25 @@ export default function AdminProjectsPage() {
                                 <Link href={`/admin/editor/project/${project.id}`} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="Edit">
                                     <Edit className="w-5 h-5" />
                                 </Link>
-                                <button onClick={() => handleDelete(project.id!)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete project?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. This project will be permanently deleted.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(project.id!)} className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                              </div>
                          </div>
 
@@ -140,12 +169,28 @@ export default function AdminProjectsPage() {
                           {/* Mobile Actions */}
                           <div className="flex sm:hidden items-center gap-2 mt-4 pt-4 border-t border-slate-50">
                                 <Link href={`/admin/editor/project/${project.id}`} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Edit</Link>
-                                <button onClick={() => handleDelete(project.id!)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Delete</button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Delete</button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete project?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(project.id!)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                     </div>
-                 </div>
-             ))
-          )}
+                </div>
+            ))
+         )}
       </div>
     </div>
   );

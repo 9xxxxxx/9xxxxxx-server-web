@@ -7,6 +7,18 @@ import { Plus, Edit, Trash2, Eye, Search, Image as ImageIcon } from "lucide-reac
 import { Post } from "@/lib/blog"; 
 import { useRouter } from "next/navigation";
 import { formatDate, getAssetUrl } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -25,18 +37,19 @@ export default function AdminPostsPage() {
       setPosts(data);
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load posts");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this post?")) return;
     try {
       await fetchAPI(`/api/posts/${id}`, { method: "DELETE" });
       setPosts(posts.filter(p => p.id !== id));
+      toast.success("Post deleted successfully");
     } catch (error) {
-      alert("Failed to delete post");
+      toast.error("Failed to delete post");
     }
   }
 
@@ -117,9 +130,26 @@ export default function AdminPostsPage() {
                                 <Link href={`/admin/editor/post/${post.id}`} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="Edit">
                                     <Edit className="w-5 h-5" />
                                 </Link>
-                                <button onClick={() => handleDelete(post.id!)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
+                                
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete post?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. This post will be permanently deleted from the database.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(post.id!)} className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         </div>
 
@@ -132,7 +162,23 @@ export default function AdminPostsPage() {
                             {/* Mobile Actions */}
                             <div className="flex sm:hidden items-center gap-2 mt-2">
                                 <Link href={`/admin/editor/post/${post.id}`} className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg">Edit</Link>
-                                <button onClick={() => handleDelete(post.id!)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg">Delete</button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg">Delete</button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete post?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(post.id!)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         </div>
                     </div>

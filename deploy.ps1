@@ -1,7 +1,8 @@
 # --- 配置区 ---
 $SERVER_USER = "root"
-$SERVER_HOST = "bytedance"
+$SERVER_HOST = "115.191.9.139"
 $SERVER_PATH = "/var/www/app"
+$KEY_PATH = "C:\Users\26375\.ssh\bytedance.pem"
 # --- --- ---
 
 Write-Host "🚀 开始部署流程 (Standalone Mode)..." -ForegroundColor Cyan
@@ -58,10 +59,10 @@ tar.exe -czf backend.tar.gz --exclude="database.db" --exclude="static/uploads" -
 
 # 3. 上传到服务器
 Write-Host "📤 正在上传文件至服务器..." -ForegroundColor Yellow
-scp -o ConnectTimeout=600 out.tar.gz "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
+scp -i $KEY_PATH -o ConnectTimeout=600 out.tar.gz "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
 if ($LASTEXITCODE -ne 0) { throw "上传前端代码失败" }
 
-scp -o ConnectTimeout=600 backend.tar.gz "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
+scp -i $KEY_PATH -o ConnectTimeout=600 backend.tar.gz "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
 if ($LASTEXITCODE -ne 0) { throw "上传后端代码失败" }
 
 if ($LASTEXITCODE -ne 0) {
@@ -70,7 +71,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # 同步 Nginx 配置
-scp -r deploy/ "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
+scp -i $KEY_PATH -r deploy/ "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
 
 # 4. 远程执行部署
 Write-Host "🔧 正在远程执行解压和重启服务..." -ForegroundColor Yellow
@@ -112,7 +113,7 @@ $Commands = @(
 )
 
 $RemoteCmd = $Commands -join "; "
-ssh "$($SERVER_USER)@$($SERVER_HOST)" $RemoteCmd
+ssh -i $KEY_PATH "$($SERVER_USER)@$($SERVER_HOST)" $RemoteCmd
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ 部署成功！" -ForegroundColor Green
