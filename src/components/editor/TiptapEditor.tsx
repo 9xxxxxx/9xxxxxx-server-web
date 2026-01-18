@@ -398,8 +398,7 @@ export default function TiptapEditor({
         </div>
       </div>
 
-      )}
-      */}
+
 
       {/* 编辑器本体 */}
       <EditorContent editor={editor} />
