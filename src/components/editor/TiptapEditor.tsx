@@ -138,7 +138,7 @@ export default function TiptapEditor({
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: "rounded-lg bg-slate-100 dark:bg-slate-800 p-4 font-mono text-sm leading-relaxed my-4 shadow-inner border border-slate-200 dark:border-slate-700",
+          class: "rounded-lg bg-[#0d1117] p-4 font-mono text-sm leading-relaxed my-4 shadow-inner border border-slate-800 overflow-x-auto",
         }
       }),
       BubbleMenuExtension,
