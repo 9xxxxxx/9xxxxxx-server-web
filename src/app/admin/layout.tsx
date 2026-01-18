@@ -12,8 +12,10 @@ import {
   LogOut, 
   Menu,
   X,
+  User,
   Home,
-  ExternalLink
+  ExternalLink,
+  MessageSquare
 } from "lucide-react";
 import clsx from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,6 +69,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Overview", href: "/admin", icon: LayoutDashboard },
     { name: "Posts", href: "/admin/posts", icon: FileText },
     { name: "Projects", href: "/admin/projects", icon: Briefcase },
+    { name: "Comments", href: "/admin/comments", icon: MessageSquare },
+    { name: "Users", href: "/admin/users", icon: User },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
 

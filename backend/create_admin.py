@@ -1,33 +1,36 @@
+import os
+import sys
 from sqlmodel import Session, select
 from database import engine, create_db_and_tables
 from models import User
 from auth import get_password_hash
 
-def create_admin_user():
-    # Ensure tables exist
+def create_initial_admin(email: str = "admin@example.com", password: str = "admin123"):
+    # Ensure tables and columns exist
     create_db_and_tables()
     
     with Session(engine) as session:
-        # Check if admin already exists
-        statement = select(User).where(User.email == "huangqiannb@gmail.com")
-        existing_user = session.exec(statement).first()
-        
+        # Check if any user exists
+        existing_user = session.exec(select(User)).first()
         if existing_user:
-            print("Admin user already exists.")
+            print("Users already exist in the database. Skipping admin creation.")
             return
 
-        # Create new admin user
-        hashed_pwd = get_password_hash("wdnmdadmin")
+        print(f"Creating initial admin user: {email}")
+        hashed_password = get_password_hash(password)
         admin_user = User(
-            email="huangqiannb@gmail.com",
-            password=hashed_pwd,
-            name="Admin User"
+            email=email,
+            password=hashed_password,
+            name=email.split("@")[0],
+            fullName="Administrator"
         )
         session.add(admin_user)
         session.commit()
-        print("Admin user created successfully!")
-        print("Email: huangqiannb@gmail.com")
-        print("Password: wdnmdadmin")
+        print("Admin user created successfully.")
 
 if __name__ == "__main__":
-    create_admin_user()
+    # Get email/password from args if provided
+    email = sys.argv[1] if len(sys.argv) > 1 else "admin@example.com"
+    password = sys.argv[2] if len(sys.argv) > 2 else "admin123"
+    
+    create_initial_admin(email, password)

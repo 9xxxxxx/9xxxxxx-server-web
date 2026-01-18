@@ -20,7 +20,8 @@ export default function AdminProjectsPage() {
 
   async function loadProjects() {
     try {
-      const data = await fetchAPI<Project[]>("/api/projects");
+      // 获取所有项目,包括需登录的
+      const data = await fetchAPI<Project[]>("/api/projects?include_login_required=true");
       setProjects(data);
     } catch (error) {
       console.error(error);
@@ -52,7 +53,7 @@ export default function AdminProjectsPage() {
            <p className="text-slate-500 font-medium">Showcase your best work.</p>
         </div>
         <Link 
-            href="/admin/projects/editor" 
+            href="/admin/editor/project/new" 
             className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-200"
         >
             <Plus className="w-5 h-5" /> New Project
@@ -81,8 +82,8 @@ export default function AdminProjectsPage() {
           ) : (
              filtered.map(project => (
                  <div key={project.id} className="group bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-purple-100 transition-all flex flex-col sm:flex-row gap-6">
-                    {/* Cover Image */}
-                     <div className="w-full sm:w-48 h-32 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 relative">
+                    {/* Cover Image - 点击进入编辑 */}
+                     <Link href={`/admin/editor/project/${project.id}`} className="w-full sm:w-48 h-32 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 relative block cursor-pointer">
                         {project.image ? (
                             <img src={getAssetUrl(project.image)} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         ) : (
@@ -95,13 +96,15 @@ export default function AdminProjectsPage() {
                                 {project.published ? "Live" : "Draft"}
                              </span>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Content */}
                     <div className="flex-1 flex flex-col">
                          <div className="flex items-start justify-between gap-4">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-900 leading-tight mb-2 line-clamp-1">{project.title}</h3>
+                                <Link href={`/admin/editor/project/${project.id}`} className="cursor-pointer hover:text-purple-600 transition-colors">
+                                    <h3 className="text-xl font-bold text-slate-900 leading-tight mb-2 line-clamp-1">{project.title}</h3>
+                                </Link>
                                 <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed">{project.description}</p>
                             </div>
                              
@@ -110,7 +113,7 @@ export default function AdminProjectsPage() {
                                 <Link href={`/projects/${project.slug}`} target="_blank" className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="View">
                                 <Eye className="w-5 h-5" />
                                 </Link>
-                                <Link href={`/admin/projects/editor?id=${project.id}`} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="Edit">
+                                <Link href={`/admin/editor/project/${project.id}`} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="Edit">
                                     <Edit className="w-5 h-5" />
                                 </Link>
                                 <button onClick={() => handleDelete(project.id!)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
@@ -136,7 +139,7 @@ export default function AdminProjectsPage() {
                          
                           {/* Mobile Actions */}
                           <div className="flex sm:hidden items-center gap-2 mt-4 pt-4 border-t border-slate-50">
-                                <Link href={`/admin/projects/editor?id=${project.id}`} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Edit</Link>
+                                <Link href={`/admin/editor/project/${project.id}`} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Edit</Link>
                                 <button onClick={() => handleDelete(project.id!)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg flex-1 text-center font-bold text-sm">Delete</button>
                             </div>
                     </div>

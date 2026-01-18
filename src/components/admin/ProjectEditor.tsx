@@ -33,6 +33,7 @@ export default function ProjectEditor({ initialProject, isEditing = false }: Pro
   const [githubLink, setGithubLink] = useState(initialProject?.githubLink || "");
   const [demoLink, setDemoLink] = useState(initialProject?.demoLink || "");
   const [published, setPublished] = useState(initialProject ? (initialProject as any).published : true);
+  const [visibility, setVisibility] = useState((initialProject as any)?.visibility || "public"); // "public" or "login_required"
   
   // Array State
   const [techStack, setTechStack] = useState<string[]>(initialProject?.techStack || []);
@@ -107,6 +108,7 @@ export default function ProjectEditor({ initialProject, isEditing = false }: Pro
             techStack,
             features,
             published: Boolean(published),
+            visibility,
         };
 
         if (isEditing && initialProject?.id) {
@@ -238,7 +240,7 @@ export default function ProjectEditor({ initialProject, isEditing = false }: Pro
                         placeholder: "Detailed project breakdown...", 
                         status: false, 
                         spellChecker: false,
-                        autofocus: isEditing,
+                        autofocus: false, // Disabled to prevent focus stealing from other inputs
                         uploadImage: true,
                         imageUploadFunction: async (file: File, onSuccess: (url: string) => void, onError: (error: string) => void) => {
                             const formData = new FormData();
@@ -271,6 +273,13 @@ export default function ProjectEditor({ initialProject, isEditing = false }: Pro
                     <select value={published ? "true" : "false"} onChange={(e) => setPublished(e.target.value === "true")} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/10">
                         <option value="false">Draft</option>
                         <option value="true">Published</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Visibility</label>
+                    <select value={visibility} onChange={(e) => setVisibility(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/10">
+                        <option value="public">Public (公开)</option>
+                        <option value="login_required">Login Required (需登录)</option>
                     </select>
                 </div>
                 <div>

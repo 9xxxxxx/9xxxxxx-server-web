@@ -20,8 +20,27 @@ export type Post = {
 };
 
 // Get all published posts, optionally filtered by category
+// 如果用户已登录,会自动获取需登录才能看的内容
 export async function getAllPosts(category?: string): Promise<Post[]> {
-  const query = category && category !== "All" ? `?category=${category}` : "";
+  const params = new URLSearchParams();
+  if (category && category !== "All") {
+    params.append("category", category);
+  }
+  
+  // 检查是否有登录 token,有则获取 login_required 内容
+  if (typeof window !== "undefined") {
+    try {
+      const storage = localStorage.getItem("admin-auth-storage");
+      if (storage) {
+        const parsed = JSON.parse(storage);
+        if (parsed.state?.accessToken) {
+          params.append("include_login_required", "true");
+        }
+      }
+    } catch (e) {}
+  }
+  
+  const query = params.toString() ? `?${params.toString()}` : "";
   const posts = await fetchAPI<Post[]>(`/api/posts${query}`);
   return posts.map(transformPost);
 }

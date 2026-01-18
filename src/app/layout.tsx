@@ -25,6 +25,7 @@ export default function RootLayout({
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          crossOrigin="anonymous"
         />
       </head>
       <body className={`font-sans antialiased bg-transparent text-foreground transition-colors duration-300 min-h-screen flex flex-col relative selection:bg-indigo-100 selection:text-indigo-900`}>

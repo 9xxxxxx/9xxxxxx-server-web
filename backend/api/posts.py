@@ -11,11 +11,16 @@ def get_posts(
     session: Session = Depends(get_session),
     category: Optional[str] = None,
     tag: Optional[str] = None,
-    published_only: bool = True
+    published_only: bool = True,
+    include_login_required: bool = False  # 管理员请求时传 True
 ):
     query = select(Post).order_by(Post.createdAt.desc())
     if published_only:
         query = query.where(Post.published == True)
+    
+    # 权限过滤: 默认只返回公开内容
+    if not include_login_required:
+        query = query.where(Post.visibility == "public")
     
     if category and category != "All":
         query = query.where(Post.category == category)

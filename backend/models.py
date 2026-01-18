@@ -12,7 +12,9 @@ class User(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     email: str = Field(index=True, unique=True)
     password: str
-    name: Optional[str] = None
+    name: Optional[str] = None  # 保留旧字段兼容性
+    fullName: Optional[str] = None  # 用户显示名称
+    avatar: Optional[str] = None  # 用户头像URL,为空时使用默认头像
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
@@ -28,6 +30,7 @@ class Post(SQLModel, table=True):
     description: str
     content: str = Field(sa_column=Column(Text))
     published: bool = Field(default=False, index=True)
+    visibility: str = Field(default="public", index=True)  # "public" or "login_required"
     category: str = Field(default="Tech")
     coverImage: Optional[str] = None
     tags: List[str] = Field(default=[], sa_column=Column(JSON))
@@ -36,7 +39,7 @@ class Post(SQLModel, table=True):
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
     authorId: str = Field(foreign_key="user.id", index=True)
-    author: User = Relationship(back_populates="posts")
+    author: "User" = Relationship(back_populates="posts")
     comments: List["Comment"] = Relationship(back_populates="post")
 
 class Project(SQLModel, table=True):
@@ -52,12 +55,13 @@ class Project(SQLModel, table=True):
     image: str
     category: Optional[str] = None
     published: bool = Field(default=True, index=True)
+    visibility: str = Field(default="public", index=True)  # "public" or "login_required"
     likes: int = Field(default=0)
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
     authorId: str = Field(foreign_key="user.id", index=True)
-    author: User = Relationship(back_populates="projects")
+    author: "User" = Relationship(back_populates="projects")
     comments: List["Comment"] = Relationship(back_populates="project")
 
 class Comment(SQLModel, table=True):
@@ -73,7 +77,7 @@ class Comment(SQLModel, table=True):
     project: Optional[Project] = Relationship(back_populates="comments")
 
     authorId: Optional[str] = Field(default=None, foreign_key="user.id")
-    author: Optional[User] = Relationship(back_populates="comments")
+    author: Optional["User"] = Relationship(back_populates="comments")
 
 class SiteConfig(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)

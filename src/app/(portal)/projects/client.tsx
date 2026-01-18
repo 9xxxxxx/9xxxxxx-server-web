@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Project } from "@/lib/projects";
 import { BlogSearch } from "@/components/blog/BlogSearch"; // Reuse search component
 import { FilterRow } from "@/components/ui/filter-row";
@@ -16,45 +16,71 @@ interface ProjectsClientPageProps {
 export default function ProjectsClientPage({ initialProjects, allTechStacks }: ProjectsClientPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTech, setSelectedTech] = useState<string>("All");
-  
-  // Projects categories seem less diverse in schema (just nullable string), 
-  // so maybe we stick to Tech Stack as the primary "Tag" filter?
-  // Or we can extract unique categories if they exist.
+
+  const [projects, setProjects] = useState<Project[]>(initialProjects || []);
+  const [loading, setLoading] = useState(initialProjects.length === 0);
+
+
+  useEffect(() => {
+    if (projects.length === 0) {
+        const loadData = async () => {
+             try {
+                const { getAllProjects } = await import("@/lib/projects");
+                const fetchedProjects = await getAllProjects();
+                setProjects(fetchedProjects);
+             } catch (e) {
+                 console.error("Failed to load projects", e);
+             } finally {
+                 setLoading(false);
+             }
+        };
+        loadData();
+    } else {
+        setLoading(false);
+    }
+  }, []);
+
+  // Compute derived state from projects
   const uniqueCategories = useMemo(() => {
-    const cats = new Set(initialProjects.map(p => p.category).filter((c): c is string => !!c));
+    const cats = new Set(projects.map(p => p.category).filter((c): c is string => !!c));
     return ["All", ...Array.from(cats)];
-  }, [initialProjects]);
+  }, [projects]);
+
+  const uniqueTechStacks = useMemo(() => {
+     if (allTechStacks && allTechStacks.length > 0) return allTechStacks;
+     // If initial tech stacks not provided, compute from fetched projects
+     return Array.from(new Set(projects.flatMap(p => p.techStack))).sort();
+  }, [allTechStacks, projects]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-
-  const displayTechs = ["All", ...allTechStacks];
+  const displayTechs = ["All", ...uniqueTechStacks];
 
   // Filter Logic
   const filteredProjects = useMemo(() => {
-    let projects = initialProjects;
+    let result = projects;
 
     // Filter by Category
     if (selectedCategory !== "All") {
-      projects = projects.filter(p => p.category === selectedCategory);
+        result = result.filter(p => p.category === selectedCategory);
     }
 
     // Filter by Tech Stack
     if (selectedTech !== "All") {
-      projects = projects.filter(p => p.techStack.includes(selectedTech));
+        result = result.filter(p => p.techStack.includes(selectedTech));
     }
 
     // Filter by Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      projects = projects.filter(p => 
+      result = result.filter(p => 
         p.title.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
         p.techStack.some(t => t.toLowerCase().includes(q))
       );
     }
 
-    return projects;
-  }, [initialProjects, selectedCategory, selectedTech, searchQuery]);
+    return result;
+  }, [projects, selectedCategory, selectedTech, searchQuery]);
 
   return (
     <div className="min-h-screen relative font-sans">
@@ -94,8 +120,9 @@ export default function ProjectsClientPage({ initialProjects, allTechStacks }: P
       {/* Projects Grid */}
       <main className="max-w-7xl mx-auto px-6 pb-32 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {filteredProjects.map((project) => (
+{filteredProjects.map((project) => (
                <Link key={project.id} href={`/projects/${project.slug}`} className="group block h-full">
+
                     <div className="bg-white rounded-[2rem] overflow-hidden h-full shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-slate-100 relative flex flex-col">
                         <div className="h-64 overflow-hidden relative">
                             <img 

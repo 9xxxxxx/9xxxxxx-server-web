@@ -134,7 +134,15 @@ export function CommandMenu() {
                         <Command.Item
                             key={item.url}
                             value={`${item.title} ${item.description} ${item.category}`}
-                            onSelect={() => runCommand(() => router.push(item.url))}
+                            onSelect={() => runCommand(() => {
+                                const slug = item.url.split('/').pop();
+                                // Assuming item.url format was /projects/slug or /blog/slug
+                                // We check the type to build the new URL
+                                const newUrl = item.type === 'Project' 
+                                    ? `/projects/${slug}` 
+                                    : `/blog/${slug}`;
+                                router.push(newUrl);
+                            })}
                             className="relative flex items-center gap-3 rounded-lg px-2 py-3 text-sm aria-selected:bg-indigo-50 dark:aria-selected:bg-indigo-900/20 aria-selected:text-indigo-600 cursor-pointer group select-none transition-colors"
                         >   
                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100/50 dark:bg-indigo-900/30 text-indigo-600">
@@ -158,7 +166,11 @@ export function CommandMenu() {
                         <Command.Item
                             key={item.url}
                             value={`${item.title} ${item.description} ${item.category}`}
-                            onSelect={() => runCommand(() => router.push(item.url))}
+                            onSelect={() => runCommand(() => {
+                                const slug = item.url.split('/').pop();
+                                const newUrl = `/blog/${slug}`;
+                                router.push(newUrl);
+                            })}
                             className="relative flex items-center gap-3 rounded-lg px-2 py-3 text-sm aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 aria-selected:text-blue-600 cursor-pointer group select-none transition-colors"
                         >
                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100/50 dark:bg-blue-900/30 text-blue-600">

@@ -33,7 +33,9 @@ export function CommentSection({ projectId, postId }: CommentSectionProps) {
       }
       
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-      const res = await fetch(`${apiUrl}/api/comments/${slug}`);
+      // 根据是 projectId 还是 postId 选择正确的 API 路径
+      const endpoint = projectId ? `/api/comments/project/${slug}` : `/api/comments/post/${slug}`;
+      const res = await fetch(`${apiUrl}${endpoint}`);
       
       if (!res.ok) {
         // Comments might not be implemented yet, that's OK
@@ -63,7 +65,9 @@ export function CommentSection({ projectId, postId }: CommentSectionProps) {
     try {
       const slug = projectId || postId;
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-      const res = await fetch(`${apiUrl}/api/comments/${slug}`, {
+      // 根据是 projectId 还是 postId 选择正确的 API 路径
+      const endpoint = projectId ? `/api/comments/project/${slug}` : `/api/comments/post/${slug}`;
+      const res = await fetch(`${apiUrl}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

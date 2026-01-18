@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "@/lib/auth-store";
 import { fetchAPI } from "@/lib/api-client";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Home } from "lucide-react";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -56,6 +57,10 @@ export default function AdminLoginPage() {
         {/* Background blobs */}
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-200 rounded-full blur-[100px] opacity-50 animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200 rounded-full blur-[100px] opacity-50 animate-pulse delay-1000" />
+
+        <Link href="/" className="absolute top-8 left-8 p-3 bg-white/50 backdrop-blur-md rounded-full hover:bg-white hover:shadow-lg transition-all text-slate-600 hover:text-slate-900 group z-20">
+            <Home className="w-6 h-6 group-hover:scale-110 transition-transform" />
+        </Link>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

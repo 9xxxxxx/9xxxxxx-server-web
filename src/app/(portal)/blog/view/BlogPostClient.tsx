@@ -138,7 +138,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
               {relatedPosts.map((relatedPost) => (
                 <Link
                   key={relatedPost.slug}
-                  href={`/blog/${relatedPost.slug}`}
+                  href={`/blog/view?slug=${relatedPost.slug}`}
                   className="group block"
                 >
                   <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full flex flex-col">

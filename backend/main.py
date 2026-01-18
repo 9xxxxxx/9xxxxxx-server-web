@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import create_db_and_tables
 from fastapi.staticfiles import StaticFiles
-from api import posts, projects, site, stats, auth, upload, search, analytics, categories, comments
+from api import posts, projects, site, stats, auth, upload, search, analytics, categories, comments, users
 import os
 
 @asynccontextmanager
@@ -14,7 +14,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Mount static files
-os.makedirs("static/uploads", exist_ok=True)
+# Mount static files
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "static/uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Mount the uploads directory specifically to /static/uploads
+app.mount("/static/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+# Keep mounting the local static folder for other assets if any (optional, but safe)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # CORS is important for local dev if ports differ, and for client-side fetches
@@ -43,6 +48,7 @@ app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(categories.router, prefix="/api/categories", tags=["categories"])
 app.include_router(comments.router, prefix="/api/comments", tags=["comments"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
 
 @app.get("/")
 def read_root():

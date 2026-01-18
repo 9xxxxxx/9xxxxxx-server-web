@@ -61,7 +61,12 @@ def update_site_config(
 async def send_contact_email(msg: ContactMessage):
     api_key = os.getenv("RESEND_API_KEY")
     if not api_key:
+        print("[Resend] Error: RESEND_API_KEY not configured")
         return {"success": False, "error": "Email service not configured"}
+    
+    # 注意: onboarding@resend.dev 只能发送到 Resend 账户验证过的邮箱
+    # 如需发送到任意邮箱,需要验证自己的域名
+    recipient_email = os.getenv("CONTACT_EMAIL", "huangqiannb@gmail.com")
     
     async with httpx.AsyncClient() as client:
         try:
@@ -73,18 +78,26 @@ async def send_contact_email(msg: ContactMessage):
                 },
                 json={
                     "from": "Portfolio Contact <onboarding@resend.dev>",
-                    "to": ["huangqiannb@gmail.com"],
+                    "to": [recipient_email],
                     "subject": f"[Portfolio] {msg.subject}",
                     "reply_to": msg.email,
-                    "text": f"Name: {msg.name}\nEmail: {msg.email}\n\nMessage:\n{msg.message}"
+                    "html": f"""
+                        <h2>新留言来自: {msg.name}</h2>
+                        <p><strong>邮箱:</strong> {msg.email}</p>
+                        <p><strong>主题:</strong> {msg.subject}</p>
+                        <hr/>
+                        <p>{msg.message}</p>
+                    """
                 }
             )
             
-            if response.status_code != 200:
-                print(f"Resend error: {response.text}")
-                return {"success": False, "error": "Failed to send email"}
+            if response.status_code == 200:
+                print(f"[Resend] Email sent successfully to {recipient_email}")
+                return {"success": True}
+            else:
+                print(f"[Resend] Error {response.status_code}: {response.text}")
+                return {"success": False, "error": f"Failed to send email: {response.status_code}"}
                 
-            return {"success": True}
         except Exception as e:
-            print(f"Contact email exception: {str(e)}")
+            print(f"[Resend] Exception: {str(e)}")
             return {"success": False, "error": str(e)}

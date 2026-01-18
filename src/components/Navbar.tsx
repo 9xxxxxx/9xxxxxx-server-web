@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 import { cn, getAssetUrl } from "@/lib/utils";
 import { ModeToggle } from "@/components/ThemeToggle";
 import { motion } from "framer-motion";
-import { House, FolderKanban, BookOpen, Sparkles, User, Settings, Search, Github } from "lucide-react";
+import { House, FolderKanban, BookOpen, Sparkles, Settings, Search, Github } from "lucide-react";
+import { UserMenu } from "@/components/LoginModal";
+import { useAuthStore } from "@/lib/auth-store";
 
 interface NavbarProps {
   config?: {
@@ -18,15 +20,21 @@ interface NavbarProps {
 
 export function Navbar({ config }: NavbarProps) {
   const pathname = usePathname();
+  const { user, accessToken } = useAuthStore();
   
   // Default values if config fails loading
   const { 
-    ownerName = "Garry", 
-    avatarInitial = "G", 
-    avatarGradient = "from-blue-600 to-indigo-600",
-    avatarImage
+    ownerName: siteOwnerName = "Garry", 
+    avatarInitial: siteAvatarInitial = "G", 
+    avatarGradient: siteAvatarGradient = "from-blue-600 to-indigo-600",
+    avatarImage: siteAvatarImage
   } = config || {};
 
+  // If user is logged in, use their profile. Otherwise use site config.
+  const displayName = accessToken && user?.fullName ? user.fullName : siteOwnerName;
+  const displayAvatar = accessToken && user ? user.avatar : siteAvatarImage;
+  const displayInitial = accessToken && user?.fullName ? user.fullName.charAt(0).toUpperCase() : siteAvatarInitial;
+  
   const navItems = [
     { name: "首页", path: "/", icon: House },
     { name: "项目", path: "/projects", icon: FolderKanban },
@@ -45,26 +53,31 @@ export function Navbar({ config }: NavbarProps) {
         
         {/* User Identity (Left) */}
         <Link href="/" className="flex items-center gap-4 pl-2 group">
-          {avatarImage ? (
+          {displayAvatar ? (
              <img 
-               src={getAssetUrl(avatarImage)} 
-               alt={ownerName} 
+               src={getAssetUrl(displayAvatar)} 
+               alt={displayName} 
                className="w-12 h-12 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-300 border-2 border-white/50"
+               onError={(e) => {
+                 // If avatar fails to load, show gradient with initial
+                 (e.target as HTMLImageElement).style.display = 'none';
+               }}
              />
-          ) : (
+          ) : null}
+          {(!displayAvatar) && (
             <div className={cn(
                 "w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg group-hover:scale-105 transition-transform duration-300 bg-gradient-to-br",
-                avatarGradient
+                siteAvatarGradient
             )}>
-                {avatarInitial}
+                {displayInitial}
             </div>
           )}
           <div className="hidden sm:flex flex-col">
             <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
-              {ownerName}
+              {displayName}
             </span>
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Portfolio
+              {accessToken && user ? "User Profile" : "Portfolio"}
             </span>
           </div>
         </Link>
@@ -108,8 +121,9 @@ export function Navbar({ config }: NavbarProps) {
              >
                 <Search className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
              </button>
+             <UserMenu />
              <Link href="/admin" className="p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all group" aria-label="Dashboard">
-                <Settings className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
+                <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
              </Link>
              <div className="w-px h-6 bg-slate-200 mx-2" />
              <div className="scale-110">

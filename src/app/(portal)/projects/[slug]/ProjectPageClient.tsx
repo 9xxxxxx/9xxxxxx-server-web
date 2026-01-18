@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { LikeButton } from "@/components/ui/like-button";
 import { CommentSection } from "@/components/ui/comment-section";
+import { HtmlRenderer } from "@/components/blog/HtmlRenderer";
 
 export default function ProjectPageClient({ project, relatedProjects }: { project: Project; relatedProjects: Project[] }) {
   const { scrollY } = useScroll();
@@ -88,8 +89,8 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
                            <Code2 className="w-6 h-6 text-pink-500" />
                            详细方案
                         </h3>
-                        <div className="whitespace-pre-line leading-relaxed text-slate-600 dark:text-slate-400">
-                            {project.fullDescription}
+                        <div className="text-slate-600 dark:text-slate-400">
+                            <HtmlRenderer content={project.fullDescription || ""} />
                         </div>
                     </div>
 

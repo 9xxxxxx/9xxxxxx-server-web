@@ -7,8 +7,16 @@ from models import Project
 router = APIRouter()
 
 @router.get("/", response_model=List[Project])
-def get_projects(session: Session = Depends(get_session)):
+def get_projects(
+    session: Session = Depends(get_session),
+    include_login_required: bool = False  # 管理员请求时传 True
+):
     query = select(Project).where(Project.published == True).order_by(Project.createdAt.desc())
+    
+    # 权限过滤: 默认只返回公开内容
+    if not include_login_required:
+        query = query.where(Project.visibility == "public")
+    
     return session.exec(query).all()
 
 @router.get("/{slug}", response_model=Project)

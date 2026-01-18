@@ -24,8 +24,24 @@ export type Project = {
   };
 };
 
+// 如果用户已登录,会自动获取需登录才能看的内容
 export async function getAllProjects(): Promise<Project[]> {
-  const projects = await fetchAPI<Project[]>("/api/projects");
+  let query = "";
+  
+  // 检查是否有登录 token,有则获取 login_required 内容
+  if (typeof window !== "undefined") {
+    try {
+      const storage = localStorage.getItem("admin-auth-storage");
+      if (storage) {
+        const parsed = JSON.parse(storage);
+        if (parsed.state?.accessToken) {
+          query = "?include_login_required=true";
+        }
+      }
+    } catch (e) {}
+  }
+  
+  const projects = await fetchAPI<Project[]>(`/api/projects${query}`);
   return projects.map(transformProject);
 }
 

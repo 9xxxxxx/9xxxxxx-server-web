@@ -7,6 +7,7 @@ import { Loader2, Save, Image as ImageIcon, User, CheckCircle2, Plus, X } from "
 import { getAssetUrl } from "@/lib/utils";
 import { motion } from "framer-motion";
 import ImageCropper from "@/components/admin/ImageCropper";
+import { useAuthStore, User as UserType } from "@/lib/auth-store";
 
 export default function SettingsPage() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
@@ -14,7 +15,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Form State
+  // Form State - Site Config
   const [ownerName, setOwnerName] = useState("");
   const [siteTitle, setSiteTitle] = useState("");
   const [avatarImage, setAvatarImage] = useState("");
@@ -22,12 +23,21 @@ export default function SettingsPage() {
   const [avatarGradient, setAvatarGradient] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
+
+  // Form State - Personal Profile
+  const { user, setUser } = useAuthStore();
+  const [personalFullName, setPersonalFullName] = useState("");
+  const [personalAvatar, setPersonalAvatar] = useState("");
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
   
   // Image cropping state
   const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
+  const [croppingType, setCroppingType] = useState<"site" | "personal">("site");
 
   useEffect(() => {
+    // Load Site Config
     fetchAPI<SiteConfig>("/api/site-config")
       .then((data) => {
         setConfig(data);
@@ -40,14 +50,24 @@ export default function SettingsPage() {
       })
       .catch((err) => console.error("Failed to load settings", err))
       .finally(() => setLoading(false));
-  }, []);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Load Personal Profile
+    fetchAPI<any>("/api/users/me")
+      .then((data) => {
+        setPersonalFullName(data.fullName || "");
+        setPersonalAvatar(data.avatar || "");
+        setUser(data);
+      })
+      .catch((err) => console.error("Failed to load personal profile", err));
+  }, [setUser]);
+
+  const handleImageUpload = (type: "site" | "personal") => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const tempUrl = URL.createObjectURL(file);
     setTempImageUrl(tempUrl);
+    setCroppingType(type);
     setShowCropper(true);
   };
   
@@ -68,7 +88,13 @@ export default function SettingsPage() {
         
         if (!res.ok) throw new Error("Upload failed");
         const data = await res.json();
-        setAvatarImage(data.url);
+        
+        if (croppingType === "site") {
+          setAvatarImage(data.url);
+        } else {
+          setPersonalAvatar(data.url);
+        }
+        
         setShowCropper(false);
         setTempImageUrl(null);
     } catch (err) {
@@ -76,7 +102,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSaveSiteConfig = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setSuccess(false);
@@ -101,9 +127,36 @@ export default function SettingsPage() {
         setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
         console.error("Save error:", error);
-        alert("Failed to save settings");
+        alert("Failed to save site settings");
     } finally {
-        setSaving(false);
+      setSaving(false);
+    }
+  };
+
+  const handleUpdatePersonalProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingProfile(true);
+    setProfileSuccess(false);
+
+    try {
+      const payload = {
+        fullName: personalFullName,
+        avatar: personalAvatar || null
+      };
+
+      const updatedUser = await fetchAPI<any>("/api/users/me", {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+
+      setUser(updatedUser);
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 3000);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      alert("Failed to update personal profile");
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -119,17 +172,77 @@ export default function SettingsPage() {
             <p className="text-slate-500 mt-1">Manage your profile and site configuration</p>
          </div>
          <button 
-            onClick={handleSave}
+            onClick={handleSaveSiteConfig}
             disabled={saving}
             className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200 disabled:opacity-70"
          >
             {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : success ? <CheckCircle2 className="w-5 h-5" /> : <Save className="w-5 h-5" />}
-            {success ? "Saved!" : "Save Changes"}
+            {success ? "Saved!" : "Save Site Changes"}
          </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-         {/* Profile Section */}
+      <div className="grid grid-cols-1 gap-12">
+         {/* Personal Profile Section */}
+         <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-8 relative overflow-hidden"
+         >
+             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-teal-500" />
+             
+             <div className="flex items-center justify-between mb-2">
+                 <h2 className="text-xl font-bold text-slate-900">My Personal Profile</h2>
+                 <button 
+                    onClick={handleUpdatePersonalProfile}
+                    disabled={isUpdatingProfile}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-md disabled:opacity-70"
+                 >
+                    {isUpdatingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : profileSuccess ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                    {profileSuccess ? "Updated!" : "Update Profile"}
+                 </button>
+             </div>
+
+             <div className="flex items-start gap-8 flex-col md:flex-row">
+                 {/* Personal Avatar Editor */}
+                 <div className="flex-shrink-0 space-y-4">
+                     <label className="block text-sm font-bold text-slate-700 mb-2">Your Avatar</label>
+                     <div className="relative group">
+                        <div className={`w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-slate-100 flex items-center justify-center text-slate-400 text-4xl font-bold`}>
+                            {personalAvatar ? (
+                                <img src={getAssetUrl(personalAvatar)} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                <User className="w-12 h-12" />
+                            )}
+                        </div>
+                        <label className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                            <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload("personal")} />
+                            <ImageIcon className="w-8 h-8" />
+                        </label>
+                     </div>
+                     <p className="text-xs text-slate-400 text-center max-w-[8rem]">Your personal avatar for public display</p>
+                 </div>
+
+                 {/* Personal Inputs */}
+                 <div className="flex-1 w-full space-y-6">
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Your Full Name (Display Name)</label>
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <input 
+                                type="text" 
+                                value={personalFullName} 
+                                onChange={(e) => setPersonalFullName(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-bold text-lg"
+                                placeholder="Your Full Name"
+                            />
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">This is the name people see when you publish comments or articles.</p>
+                    </div>
+                 </div>
+             </div>
+         </motion.div>
+
+         {/* Site Settings Section */}
          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -137,10 +250,22 @@ export default function SettingsPage() {
          >
              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
              
+             <div className="flex items-center justify-between mb-2">
+                 <h2 className="text-xl font-bold text-slate-900">Site-wide Identification</h2>
+                 <button 
+                    onClick={handleSaveSiteConfig}
+                    disabled={saving}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md disabled:opacity-70"
+                 >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : success ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                    {success ? "Saved!" : "Update Site Info"}
+                 </button>
+             </div>
+
              <div className="flex items-start gap-8 flex-col md:flex-row">
-                 {/* Avatar Editor */}
+                 {/* Site Avatar Editor */}
                  <div className="flex-shrink-0 space-y-4">
-                     <label className="block text-sm font-bold text-slate-700 mb-2">Avatar</label>
+                     <label className="block text-sm font-bold text-slate-700 mb-2">Site Avatar/Logo</label>
                      <div className="relative group">
                         <div className={`w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white text-4xl font-bold`}>
                             {avatarImage ? (
@@ -150,18 +275,18 @@ export default function SettingsPage() {
                             )}
                         </div>
                         <label className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                            <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                            <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload("site")} />
                             <ImageIcon className="w-8 h-8" />
                         </label>
                      </div>
-                     <p className="text-xs text-slate-400 text-center max-w-[8rem]">Click to upload new avatar</p>
+                     <p className="text-xs text-slate-400 text-center max-w-[8rem]">Displayed when no user is logged in</p>
                  </div>
 
-                 {/* Inputs */}
+                 {/* Site Inputs */}
                  <div className="flex-1 w-full space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2">Display Name</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Owner Display Name</label>
                             <div className="relative">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input 
@@ -169,13 +294,13 @@ export default function SettingsPage() {
                                     value={ownerName} 
                                     onChange={(e) => setOwnerName(e.target.value)}
                                     className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 font-bold text-lg"
-                                    placeholder="Your Name"
+                                    placeholder="Site Owner"
                                 />
                             </div>
                         </div>
 
                          <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2">Avatar Initial</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Logo Initial</label>
                             <input 
                                 type="text" 
                                 value={avatarInitial} 
@@ -199,7 +324,7 @@ export default function SettingsPage() {
                     </div>
                 
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Avatar Gradient Style</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Logo Gradient Style</label>
                         <select 
                             value={avatarGradient}
                             onChange={(e) => setAvatarGradient(e.target.value)}
@@ -216,6 +341,7 @@ export default function SettingsPage() {
                  </div>
              </div>
          </motion.div>
+
 
          {/* Category Manager */}
          <motion.div 

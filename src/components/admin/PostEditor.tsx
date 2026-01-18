@@ -33,6 +33,7 @@ export default function PostEditor({ initialPost, isEditing = false }: PostEdito
   const [tags, setTags] = useState(initialPost?.tags?.join(", ") || "");
   const [coverImage, setCoverImage] = useState(initialPost?.coverImage || "");
   const [published, setPublished] = useState(initialPost ? (initialPost as any).published : true); // Default to published for new posts
+  const [visibility, setVisibility] = useState((initialPost as any)?.visibility || "public"); // "public" or "login_required"
   
   // Image cropping state
   const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
@@ -103,6 +104,7 @@ export default function PostEditor({ initialPost, isEditing = false }: PostEdito
             coverImage,
             tags: tags.split(",").map(t => t.trim()).filter(Boolean),
             published: Boolean(published),
+            visibility,
             // Update Date? Backend handles updatedAt automatically usually, or we can send it.
         };
 
@@ -203,7 +205,7 @@ export default function PostEditor({ initialPost, isEditing = false }: PostEdito
                         placeholder: "Write your masterpiece...",
                         status: false,
                         spellChecker: false,
-                        autofocus: isEditing,
+                        autofocus: false, // Disabled to prevent focus stealing from other inputs
                         uploadImage: true,
                         imageUploadFunction: async (file: File, onSuccess: (url: string) => void, onError: (error: string) => void) => {
                             const formData = new FormData();
@@ -240,6 +242,18 @@ export default function PostEditor({ initialPost, isEditing = false }: PostEdito
                     >
                         <option value="false">Draft</option>
                         <option value="true">Published</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Visibility</label>
+                    <select 
+                        value={visibility} 
+                        onChange={(e) => setVisibility(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                    >
+                        <option value="public">Public (公开)</option>
+                        <option value="login_required">Login Required (需登录)</option>
                     </select>
                 </div>
 
