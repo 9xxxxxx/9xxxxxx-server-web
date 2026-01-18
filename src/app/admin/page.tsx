@@ -83,7 +83,7 @@ export default function AdminDashboardPage() {
         <h2 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link 
-            href="/admin/posts/new" 
+            href="/admin/editor/post/new" 
             className="flex items-center gap-4 p-4 rounded-xl border-2 border-dashed border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
           >
             <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
           </Link>
           
           <Link 
-            href="/admin/projects/new" 
+            href="/admin/editor/project/new" 
             className="flex items-center gap-4 p-4 rounded-xl border-2 border-dashed border-slate-200 hover:border-purple-500 hover:bg-purple-50 transition-all group"
           >
             <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-500 transition-colors">
