@@ -257,7 +257,7 @@ export default function TiptapEditor({
         )?.state?.accessToken;
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/upload`,
+          "/api/upload",
           {
             method: "POST",
             headers: token ? { Authorization: `Bearer ${token}` } : {},
