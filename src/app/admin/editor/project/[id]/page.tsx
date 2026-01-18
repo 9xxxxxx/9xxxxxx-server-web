@@ -333,16 +333,12 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
 
       {/* Image Cropper */}
       {showCropper && tempImageUrl && (
-         <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-             <div className="bg-white rounded-xl overflow-hidden shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-100">
-                 <ImageCropper 
-                    imageSrc={tempImageUrl} 
-                    onComplete={handleCropComplete} 
-                    onCancel={() => { setShowCropper(false); setTempImageUrl(null); }}
-                    aspect={16/9}
-                 />
-             </div>
-         </div>
+          <ImageCropper 
+            imageSrc={tempImageUrl} 
+            onComplete={handleCropComplete} 
+            onCancel={() => { setShowCropper(false); setTempImageUrl(null); }}
+            aspect={16/9}
+          />
       )}
     </div>
   );
