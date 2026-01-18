@@ -215,8 +215,12 @@ export default function TiptapEditor({
 
   // 自动聚焦
   useEffect(() => {
-    if (editor) {
-      setTimeout(() => editor.commands.focus(), 100);
+    if (editor && !editor.isDestroyed && editor.view) {
+      setTimeout(() => {
+        if (!editor.isDestroyed && editor.view) {
+          editor.commands.focus();
+        }
+      }, 100);
     }
   }, [editor]);
 
@@ -240,7 +244,7 @@ export default function TiptapEditor({
 
   // 插入图片
   const addImage = useCallback(() => {
-    if (!editor || !imageUrl) return;
+    if (!editor || editor.isDestroyed || !editor.view || !imageUrl) return;
 
     editor.chain().focus().setImage({ src: imageUrl }).run();
     setShowImageInput(false);
@@ -249,7 +253,7 @@ export default function TiptapEditor({
 
   // 图片上传逻辑
   const handleImageUpload = useCallback(async (file: File) => {
-       if (!editor) return;
+       if (!editor || editor.isDestroyed) return;
        try {
         const formData = new FormData();
         formData.append("file", file);
@@ -271,7 +275,10 @@ export default function TiptapEditor({
         const data = await res.json();
         const fullUrl = data.url;
         
-        editor.chain().focus().setImage({ src: fullUrl }).run();
+        // 再次检查编辑器在异步操作后是否仍然可用
+        if (!editor.isDestroyed && editor.view) {
+          editor.chain().focus().setImage({ src: fullUrl }).run();
+        }
       } catch (error) {
         console.error("Image upload failed:", error);
         alert("图片上传失败");
