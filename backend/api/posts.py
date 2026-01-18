@@ -90,8 +90,11 @@ def get_related_posts(slug: str, limit: int = 3, session: Session = Depends(get_
 # --- Admin / CRUD Operations ---
 from auth import get_current_user
 
+from models import PostCreate, PostUpdate
+
 @router.post("/", response_model=Post)
-def create_post(post: Post, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+def create_post(post_in: PostCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    post = Post.from_orm(post_in)
     post.authorId = current_user.id
     session.add(post)
     session.commit()
@@ -99,16 +102,15 @@ def create_post(post: Post, session: Session = Depends(get_session), current_use
     return post
 
 @router.put("/{id}", response_model=Post)
-def update_post(id: str, post_data: Post, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+def update_post(id: str, post_in: PostUpdate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     post = session.get(Post, id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
     # Update fields
-    post_data_dict = post_data.dict(exclude_unset=True)
+    post_data_dict = post_in.dict(exclude_unset=True)
     for key, value in post_data_dict.items():
-        if key != "id": # Prevent ID change
-            setattr(post, key, value)
+        setattr(post, key, value)
             
     session.add(post)
     session.commit()

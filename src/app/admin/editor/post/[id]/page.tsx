@@ -171,9 +171,7 @@ export default function PostEditorPage({ params }: EditorPageProps) {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/upload`,
-          {
+        const res = await fetch("/api/upload", {
             method: "POST",
             headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
             body: formData,

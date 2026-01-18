@@ -49,10 +49,11 @@ def get_related_projects(slug: str, session: Session = Depends(get_session)):
 
 # --- Admin / CRUD ---
 from auth import get_current_user
-from models import User
+from models import User, ProjectCreate, ProjectUpdate
 
 @router.post("/", response_model=Project)
-def create_project(project: Project, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+def create_project(project_in: ProjectCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    project = Project.from_orm(project_in)
     project.authorId = current_user.id
     session.add(project)
     session.commit()
@@ -60,15 +61,14 @@ def create_project(project: Project, session: Session = Depends(get_session), cu
     return project
 
 @router.put("/{id}", response_model=Project)
-def update_project(id: str, project_data: Project, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+def update_project(id: str, project_in: ProjectUpdate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     project = session.get(Project, id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    data_dict = project_data.dict(exclude_unset=True)
+    data_dict = project_in.dict(exclude_unset=True)
     for key, value in data_dict.items():
-        if key != "id":
-            setattr(project, key, value)
+        setattr(project, key, value)
             
     session.add(project)
     session.commit()

@@ -97,6 +97,22 @@ function Divider() {
   return <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1 self-center" />;
 }
 
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { common, createLowlight } from 'lowlight'
+import css from 'highlight.js/lib/languages/css'
+import js from 'highlight.js/lib/languages/javascript'
+import ts from 'highlight.js/lib/languages/typescript'
+import html from 'highlight.js/lib/languages/xml'
+import python from 'highlight.js/lib/languages/python'
+import 'highlight.js/styles/github-dark.css' // Import Highlight.js Theme
+
+const lowlight = createLowlight(common)
+lowlight.register('html', html)
+lowlight.register('css', css)
+lowlight.register('js', js)
+lowlight.register('ts', ts)
+lowlight.register('python', python)
+
 export default function TiptapEditor({
   initialContent = "",
   onChange,
@@ -116,6 +132,13 @@ export default function TiptapEditor({
         dropcursor: {
              color: '#6366f1',
              width: 2
+        },
+        codeBlock: false, // Disable default CodeBlock
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: {
+          class: "rounded-lg bg-slate-100 dark:bg-slate-800 p-4 font-mono text-sm leading-relaxed my-4 shadow-inner border border-slate-200 dark:border-slate-700",
         }
       }),
       BubbleMenuExtension,
@@ -165,6 +188,7 @@ export default function TiptapEditor({
           "prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[calc(100vh-200px)]", 
           "prose-headings:font-bold prose-headings:tracking-tight prose-indigo",
           "prose-img:rounded-xl prose-img:shadow-lg",
+          "prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0", // 重置 Tailwind Typography 的 pre 样式
           className
         ),
       },
@@ -240,8 +264,7 @@ export default function TiptapEditor({
 
         if (!res.ok) throw new Error("Upload failed");
         const data = await res.json();
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-        const fullUrl = data.url.startsWith("http") ? data.url : `${baseUrl}${data.url}`;
+        const fullUrl = data.url;
         
         editor.chain().focus().setImage({ src: fullUrl }).run();
       } catch (error) {

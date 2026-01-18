@@ -23,8 +23,7 @@ class User(SQLModel, table=True):
     projects: List["Project"] = Relationship(back_populates="author")
     comments: List["Comment"] = Relationship(back_populates="author")
 
-class Post(SQLModel, table=True):
-    id: str = Field(default_factory=generate_uuid, primary_key=True)
+class PostBase(SQLModel):
     slug: str = Field(index=True, unique=True)
     title: str
     description: str
@@ -35,6 +34,9 @@ class Post(SQLModel, table=True):
     coverImage: Optional[str] = None
     tags: List[str] = Field(default=[], sa_column=Column(JSON))
     likes: int = Field(default=0)
+
+class Post(PostBase, table=True):
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
@@ -42,8 +44,22 @@ class Post(SQLModel, table=True):
     author: "User" = Relationship(back_populates="posts")
     comments: List["Comment"] = Relationship(back_populates="post")
 
-class Project(SQLModel, table=True):
-    id: str = Field(default_factory=generate_uuid, primary_key=True)
+class PostCreate(PostBase):
+    pass
+
+class PostUpdate(SQLModel):
+    slug: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    content: Optional[str] = None
+    published: Optional[bool] = None
+    visibility: Optional[str] = None
+    category: Optional[str] = None
+    coverImage: Optional[str] = None
+    tags: Optional[List[str]] = None
+    likes: Optional[int] = None
+
+class ProjectBase(SQLModel):
     slug: str = Field(index=True, unique=True)
     title: str
     description: str
@@ -55,14 +71,35 @@ class Project(SQLModel, table=True):
     image: str
     category: Optional[str] = None
     published: bool = Field(default=True, index=True)
-    visibility: str = Field(default="public", index=True)  # "public" or "login_required"
+    visibility: str = Field(default="public", index=True)
     likes: int = Field(default=0)
+
+class Project(ProjectBase, table=True):
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
     authorId: str = Field(foreign_key="user.id", index=True)
     author: "User" = Relationship(back_populates="projects")
     comments: List["Comment"] = Relationship(back_populates="project")
+
+class ProjectCreate(ProjectBase):
+    pass
+
+class ProjectUpdate(SQLModel):
+    slug: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    fullDescription: Optional[str] = None
+    techStack: Optional[List[str]] = None
+    features: Optional[List[str]] = None
+    githubLink: Optional[str] = None
+    demoLink: Optional[str] = None
+    image: Optional[str] = None
+    category: Optional[str] = None
+    published: Optional[bool] = None
+    visibility: Optional[str] = None
+    likes: Optional[int] = None
 
 class Comment(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)

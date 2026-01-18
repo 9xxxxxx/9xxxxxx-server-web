@@ -113,7 +113,7 @@ $Commands = @(
 )
 
 $RemoteCmd = $Commands -join "; "
-ssh -i $KEY_PATH "$($SERVER_USER)@$($SERVER_HOST)" $RemoteCmd
+ssh -i $KEY_PATH -o ConnectTimeout=60 "$($SERVER_USER)@$($SERVER_HOST)" $RemoteCmd
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ 部署成功！" -ForegroundColor Green
