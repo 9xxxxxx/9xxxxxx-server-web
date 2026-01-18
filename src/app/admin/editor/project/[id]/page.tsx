@@ -134,9 +134,18 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-          setTempImageUrl(URL.createObjectURL(file));
-          setIsSheetOpen(false); // 关键：关闭侧边栏
-          setShowCropper(true);  // 打开裁剪
+          const objectUrl = URL.createObjectURL(file);
+          // 使用 setTimeout 延迟状态更新，避免与 Sheet 关闭冲突
+          // 先设置图片 URL，然后关闭 Sheet，最后打开 Cropper
+          setTempImageUrl(objectUrl);
+          // 延迟执行以避免与 TiptapEditor 的焦点逻辑冲突
+          setTimeout(() => {
+              setIsSheetOpen(false);
+              // 再次延迟打开 Cropper，确保 Sheet 完全关闭
+              setTimeout(() => {
+                  setShowCropper(true);
+              }, 100);
+          }, 50);
       }
   };
   
