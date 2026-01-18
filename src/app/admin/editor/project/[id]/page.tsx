@@ -135,59 +135,38 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
       const file = e.target.files?.[0];
       if (file) {
           const objectUrl = URL.createObjectURL(file);
-          // 使用 setTimeout 延迟状态更新，避免与 Sheet 关闭冲突
-          // 先设置图片 URL，然后关闭 Sheet，最后打开 Cropper
           setTempImageUrl(objectUrl);
-          // 延迟执行以避免与 TiptapEditor 的焦点逻辑冲突
-          setTimeout(() => {
-              setIsSheetOpen(false);
-              // 再次延迟打开 Cropper，确保 Sheet 完全关闭
-              setTimeout(() => {
-                  setShowCropper(true);
-              }, 100);
-          }, 50);
+          setShowCropper(true);
       }
   };
   
   const handleCropComplete = async (croppedUrl: string) => {
-      console.log("[Project] handleCropComplete called with:", croppedUrl);
       try {
-         console.log("[Project] Step 1: Fetching blob from croppedUrl...");
          const blobRes = await fetch(croppedUrl);
          const blob = await blobRes.blob();
-         console.log("[Project] Step 2: Blob fetched, size:", blob.size);
          
          const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
          const formData = new FormData();
          formData.append("file", file);
-         console.log("[Project] Step 3: FormData created with file");
          
          const token = JSON.parse(localStorage.getItem("admin-auth-storage") || "{}")?.state?.accessToken;
-         console.log("[Project] Step 4: Token exists:", !!token);
-         
-         console.log("[Project] Step 5: Sending POST to /api/upload...");
          const res = await fetch("/api/upload", {
              method: "POST",
              headers: token ? { Authorization: `Bearer ${token}` } : {},
              body: formData
          });
-         console.log("[Project] Step 6: Upload response status:", res.status);
          
          if (!res.ok) {
            const errorText = await res.text();
-           console.error("[Project] Upload failed:", errorText);
            throw new Error("Upload failed: " + errorText);
          }
          
          const data = await res.json();
-         console.log("[Project] Step 7: Upload success, url:", data.url);
-         
          setImage(data.url);
          setShowCropper(false);
          toast.success("封面图已更新");
-         setIsSheetOpen(true);
       } catch(e) {
-          console.error("[Project] handleCropComplete error:", e);
+          console.error(e);
           toast.error("封面图上传失败");
       }
   };
@@ -359,7 +338,7 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
                  <ImageCropper 
                     imageSrc={tempImageUrl} 
                     onComplete={handleCropComplete} 
-                    onCancel={() => { setShowCropper(false); setTempImageUrl(null); setIsSheetOpen(true); }}
+                    onCancel={() => { setShowCropper(false); setTempImageUrl(null); }}
                     aspect={16/9}
                  />
              </div>
