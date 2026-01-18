@@ -1,436 +1,337 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
-import dynamic from "next/dynamic";
+import { useEffect, useState, useRef, use } from "react";
+import { useRouter } from "next/navigation";
+import { Post } from "@/lib/blog";
+import { useAuthStore } from "@/lib/auth-store";
+import TiptapEditor from "@/components/editor/TiptapEditor";
+import { ArrowLeft, Save, Settings, Loader2, Globe, Layout, Image as ImageIcon, Tag, Hash, X as XIcon } from "lucide-react";
 import Link from "next/link";
-import { fetchAPI } from "@/lib/api-client";
+import TextareaAutosize from 'react-textarea-autosize';
+import { toast } from "sonner";
 import { getAssetUrl } from "@/lib/utils";
 import {
-  ArrowLeft,
-  Save,
-  Loader2,
-  Image as ImageIcon,
-  X,
-  ChevronRight,
-  ChevronLeft,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import CategorySelector from "@/components/admin/CategorySelector";
-import ImageCropper from "@/components/admin/ImageCropper";
-import EditorHelp from "@/components/editor/EditorHelp";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
-// 动态导入编辑器避免 SSR 问题
-const TiptapEditor = dynamic(
-  () => import("@/components/editor/TiptapEditor"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-96 bg-slate-50 rounded-xl">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">加载编辑器...</p>
-        </div>
-      </div>
-    ),
-  }
-);
+interface EditorPageProps {
+  params: Promise<{ id: string }>;
+}
 
-export default function PostEditorPage() {
+export default function PostEditorPage({ params }: EditorPageProps) {
   const router = useRouter();
-  const params = useParams();
-  const postId = params.id as string;
-  const isEditing = postId !== "new";
+  const { accessToken } = useAuthStore();
+  const resolvedParams = use(params);
+  const postId = resolvedParams.id;
 
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(isEditing);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [editorReady, setEditorReady] = useState(!isEditing);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [post, setPost] = useState<Post | null>(null);
 
-  // 表单状态
+  // Form State
   const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState("Tech");
+  const [slug, setSlug] = useState("");
+  const [status, setStatus] = useState<"published" | "draft">("draft");
+  const [category, setCategory] = useState("Technology");
   const [tags, setTags] = useState("");
+  const [description, setDescription] = useState("");
   const [coverImage, setCoverImage] = useState("");
-  const [published, setPublished] = useState(true);
-  const [visibility, setVisibility] = useState("public");
 
-  // 图片裁剪状态
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
-  const [showCropper, setShowCropper] = useState(false);
-
-  // 加载现有文章
   useEffect(() => {
-    if (isEditing) {
-      fetchAPI(`/api/posts/id/${postId}`)
-        .then((post: any) => {
-          setTitle(post.title || "");
-          setSlug(post.slug || "");
-          setDescription(post.description || "");
-          setCategory(post.category || "Tech");
-          setTags(post.tags?.join(", ") || "");
-          setCoverImage(post.coverImage || "");
-          setPublished(post.published ?? true);
-          setVisibility(post.visibility || "public");
-          
-          // 设置内容
-          setContent(post.content || "");
-          setEditorReady(true);
-        })
-        .catch((err) => {
-          console.error("Failed to load post:", err);
-          alert("加载文章失败，可能文章不存在");
-          router.push("/admin/posts");
-        })
-        .finally(() => setInitialLoading(false));
-    }
-  }, [isEditing, postId, router]);
-
-  // 动态更新页面标题
-  useEffect(() => {
-    document.title = title ? `编辑: ${title}` : (isEditing ? "加载中..." : "新建文章");
-  }, [title, isEditing]);
-
-  // 标题变化时自动生成 slug
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setTitle(val);
-    if (!isEditing && !slug) {
-      setSlug(
-        val
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "")
-      );
-    }
-  };
-
-  // 编辑器内容变化
-  const handleEditorChange = useCallback((html: string) => {
-    setContent(html);
-  }, []);
-
-  // 封面图上传
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const tempUrl = URL.createObjectURL(file);
-    setTempImageUrl(tempUrl);
-    setShowCropper(true);
-  };
-
-  const handleCropComplete = async (croppedImageUrl: string) => {
-    try {
-      setLoading(true);
-      const blob = await fetch(croppedImageUrl).then((r) => r.blob());
-      const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const token = JSON.parse(
-        localStorage.getItem("admin-auth-storage") || "{}"
-      )?.state?.accessToken;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/upload`,
-        {
-          method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData,
-        }
-      );
-
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setCoverImage(data.url);
-      setShowCropper(false);
-      setTempImageUrl(null);
-    } catch {
-      alert("封面图上传失败");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 保存文章
-  const handleSave = async (publish: boolean = true) => {
-    if (!title.trim()) {
-      alert("请输入文章标题");
+    if (!accessToken) {
+      router.push("/admin/login");
       return;
     }
 
-    setLoading(true);
+    const fetchPost = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/posts/id/${postId}`);
+        if (!res.ok) throw new Error("Failed to fetch post");
+        const data = await res.json();
+        setPost(data);
+        setTitle(data.title);
+        setContent(data.content || "");
+        setSlug(data.slug);
+        setStatus(data.published ? "published" : "draft");
+        setCategory(data.category || "Technology");
+        setTags(data.tags?.join(", ") || "");
+        setDescription(data.description || "");
+        setCoverImage(data.coverImage || "");
+        
+        // Update Title dynamically
+         document.title = `编辑: ${data.title}`;
+      } catch (error) {
+        console.error(error);
+        toast.error("加载文章失败");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [postId, accessToken, router]);
+
+  // Handle title change to update document title
+  useEffect(() => {
+    if (title) {
+        document.title = `编辑: ${title}`;
+    }
+  }, [title]);
+
+
+  const handleSave = async () => {
+    if (!title) return toast.error("请输入标题");
+    setIsSaving(true);
 
     try {
       const payload = {
         title,
-        slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        description,
-        content,
+        content, // Content should be Markdown now thanks to TiptapEditor
+        slug,
+        published: status === "published",
         category,
+        tags: tags.split(",").map(t => t.trim()).filter(Boolean),
+        description,
         coverImage,
-        tags: tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-        published: publish,
-        visibility,
       };
 
-      if (isEditing) {
-        await fetchAPI(`/api/posts/${postId}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-      } else {
-        await fetchAPI("/api/posts", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-      }
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/posts/${postId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
-      router.push("/admin/posts");
-      router.refresh();
+      if (!res.ok) throw new Error("Failed to update post");
+      
+      // Update local state to reflect saved (although we might want to reload)
+      setPost({ ...post!, ...payload, id: postId } as Post); 
+      toast.success("已保存");
     } catch (error) {
-      alert("保存失败");
       console.error(error);
+      toast.error("保存失败");
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
+  
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-  if (initialLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium">加载文章...</p>
-        </div>
-      </div>
-    );
+      const toastId = toast.loading("上传封面中...");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/upload`,
+          {
+            method: "POST",
+            headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+            body: formData,
+          }
+        );
+
+        if (!res.ok) throw new Error("Upload failed");
+        const data = await res.json();
+        setCoverImage(data.url);
+        toast.success("上传成功", { id: toastId });
+      } catch (error) {
+          console.error(error);
+          toast.error("上传失败", { id: toastId });
+      }
+  };
+
+  if (isLoading) {
+      return (
+          <div className="flex h-screen items-center justify-center bg-white">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          </div>
+      )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* 主编辑区 */}
-      <div className="flex-1 flex flex-col">
-        {/* 顶部工具栏 */}
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/admin/posts"
-                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
-              </Link>
-              <div>
-                <h1 className="font-bold text-lg text-slate-800">
-                  {isEditing ? "编辑文章" : "新建文章"}
-                </h1>
-                <p className="text-xs text-slate-400">使用工具栏格式化内容</p>
-              </div>
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      {/* 顶部导航栏 */}
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-4">
+            <Link href="/admin/posts" className="text-slate-500 hover:text-slate-900 transition-colors p-2 -ml-2 rounded-lg hover:bg-slate-100">
+                <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+                 <span className={status === 'published' ? 'w-2 h-2 rounded-full bg-green-500' : 'w-2 h-2 rounded-full bg-amber-500'} />
+                 {status === 'published' ? '已发布' : '草稿'}
+                {isSaving && <span className="opacity-50 ml-2">保存中...</span>}
             </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleSave(false)}
-                disabled={loading}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
-              >
-                保存草稿
-              </button>
-              <button
-                onClick={() => handleSave(true)}
-                disabled={loading}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-bold hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-200"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                发布
-              </button>
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors"
-              >
-                {sidebarOpen ? (
-                  <ChevronRight className="w-5 h-5 text-slate-600" />
-                ) : (
-                  <ChevronLeft className="w-5 h-5 text-slate-600" />
-                )}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* 编辑器主体 */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* 标题输入 */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <input
-                type="text"
-                value={title}
-                onChange={handleTitleChange}
-                placeholder="输入文章标题..."
-                className="w-full text-3xl font-bold bg-transparent border-0 outline-none placeholder:text-slate-300"
-                autoFocus={!isEditing}
-              />
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="添加简短描述（可选）..."
-                rows={2}
-                className="w-full mt-4 text-slate-500 bg-transparent border-0 outline-none resize-none placeholder:text-slate-300"
-              />
-            </div>
-
-            {/* TipTap 编辑器 */}
-            {editorReady && (
-              <TiptapEditor
-                initialContent={content}
-                onChange={handleEditorChange}
-              />
-            )}
-          </div>
-        </main>
-      </div>
-
-      {/* 侧边栏 */}
-      <aside
-        className={`w-80 border-l border-slate-200 bg-white flex-shrink-0 transition-all duration-300 ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "translate-x-full absolute right-0 h-full"
-        }`}
-      >
-        <div className="p-6 space-y-6 overflow-y-auto h-full">
-          <h3 className="font-bold text-lg text-slate-800">文章设置</h3>
-
-          {/* Slug */}
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">URL Slug</label>
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono focus:border-indigo-300 focus:ring focus:ring-indigo-100 transition-all"
-              placeholder="article-slug"
-            />
-          </div>
-
-          {/* 分类 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">分类</label>
-            <CategorySelector
-              value={category}
-              onChange={setCategory}
-              placeholder="选择分类..."
-            />
-          </div>
-
-          {/* 标签 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">标签</label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-300 focus:ring focus:ring-indigo-100 transition-all"
-              placeholder="React, Next.js, API"
-            />
-          </div>
-
-          {/* 可见性 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">可见性</label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setVisibility("public")}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  visibility === "public"
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-200"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                <Eye className="w-4 h-4" />
-                公开
-              </button>
-              <button
-                type="button"
-                onClick={() => setVisibility("login_required")}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  visibility === "login_required"
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-200"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                <EyeOff className="w-4 h-4" />
-                登录可见
-              </button>
-            </div>
-          </div>
-
-          {/* 封面图 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">封面图</label>
-            {coverImage ? (
-              <div className="relative rounded-xl overflow-hidden aspect-video border border-slate-200 shadow-sm">
-                <img
-                  src={getAssetUrl(coverImage)}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setCoverImage("")}
-                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <label className="block w-full cursor-pointer group">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
-                <div className="w-full h-32 rounded-xl border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all flex flex-col items-center justify-center text-slate-400 group-hover:text-indigo-500">
-                  <ImageIcon className="w-8 h-8 mb-2" />
-                  <span className="text-xs font-bold uppercase">上传封面</span>
-                </div>
-              </label>
-            )}
-          </div>
         </div>
-      </aside>
+        
+        <div className="flex items-center gap-3">
+             <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-slate-800 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+                {isSaving ? <Loader2 className="w-3 h-3 animate-spin"/> : <Save className="w-3 h-3" />}
+                保存
+             </button>
 
-      {/* 图片裁剪器 */}
-      {showCropper && tempImageUrl && (
-        <ImageCropper
-          imageSrc={tempImageUrl}
-          onComplete={handleCropComplete}
-          onCancel={() => {
-            setShowCropper(false);
-            setTempImageUrl(null);
-          }}
-          aspect={16 / 9}
-          shape="rect"
+             <Sheet>
+                 <SheetTrigger asChild>
+                    <button className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
+                        <Settings className="w-5 h-5" />
+                    </button>
+                 </SheetTrigger>
+                 <SheetContent className="overflow-y-auto">
+                     <SheetHeader>
+                         <SheetTitle>文章设置</SheetTitle>
+                         <SheetDescription>配置元数据、SEO 和发布选项</SheetDescription>
+                     </SheetHeader>
+                     
+                     <div className="mt-8 space-y-6">
+                         {/* Slug */}
+                         <div className="space-y-2">
+                             <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                                 <Globe className="w-4 h-4" /> URL Slug
+                             </label>
+                             <input 
+                                type="text" 
+                                value={slug}
+                                onChange={e => setSlug(e.target.value)}
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                             />
+                         </div>
+
+                         {/* Status */}
+                         <div className="space-y-2">
+                             <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                                 <Layout className="w-4 h-4" /> 状态
+                             </label>
+                             <select 
+                                value={status}
+                                onChange={e => setStatus(e.target.value as any)}
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 outline-none"
+                             >
+                                 <option value="draft">草稿</option>
+                                 <option value="published">发布</option>
+                             </select>
+                         </div>
+
+                         {/* Cover Image */}
+                         <div className="space-y-2">
+                             <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                                 <ImageIcon className="w-4 h-4" /> 封面图
+                             </label>
+                             
+                             {coverImage ? (
+                                <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 group">
+                                     <img src={getAssetUrl(coverImage)} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                         <button onClick={() => setCoverImage("")} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white">
+                                             <XIcon className="w-4 h-4"/>
+                                         </button>
+                                          <label className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white cursor-pointer">
+                                             <ImageIcon className="w-4 h-4"/>
+                                             <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                                         </label>
+                                     </div>
+                                 </div>
+                             ) : (
+                                 <label className="block w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all group">
+                                     <div className="p-3 bg-slate-100 rounded-full mb-2 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                         <ImageIcon className="w-6 h-6 text-slate-400 group-hover:text-indigo-600"/>
+                                     </div>
+                                     <span className="text-xs font-medium text-slate-500 group-hover:text-indigo-600">点击上传封面</span>
+                                     <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                                 </label>
+                             )}
+                         </div>
+
+                         {/* Category */}
+                         <div className="space-y-2">
+                             <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                                 <Hash className="w-4 h-4" /> 分类
+                             </label>
+                             <input 
+                                type="text" 
+                                value={category}
+                                onChange={e => setCategory(e.target.value)}
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 outline-none"
+                             />
+                         </div>
+
+                         {/* Tags */}
+                         <div className="space-y-2">
+                             <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                                 <Tag className="w-4 h-4" /> 标签
+                             </label>
+                             <input 
+                                type="text" 
+                                value={tags}
+                                onChange={e => setTags(e.target.value)}
+                                placeholder="React, Next.js, Web"
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 outline-none"
+                             />
+                             <p className="text-xs text-slate-400">用逗号分隔多个标签</p>
+                         </div>
+
+                          {/* Description */}
+                          <div className="space-y-2">
+                             <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                                 摘要
+                             </label>
+                             <textarea 
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
+                                rows={4}
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 outline-none resize-none"
+                             />
+                         </div>
+
+                         <div className="pt-4 border-t">
+                            <button 
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                            >
+                                {isSaving ? "保存中..." : "保存更改"}
+                            </button>
+                         </div>
+                     </div>
+                 </SheetContent>
+             </Sheet>
+        </div>
+      </header>
+
+      {/* 主内容 */}
+      <main className="max-w-4xl mx-auto py-12 px-6 sm:px-8">
+        {/* 标题输入 */}
+        <TextareaAutosize
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="无标题"
+            className="w-full resize-none bg-transparent text-4xl sm:text-5xl font-extrabold text-slate-900 placeholder:text-slate-300 outline-none mb-8 leading-tight selection:bg-indigo-100"
+            minRows={1}
         />
-      )}
 
-      {/* 编辑器帮助 */}
-      <EditorHelp />
+        {/* 编辑器: 只有在 content 加载后才渲染，避免闪烁 */}
+        {!isLoading && (
+             <TiptapEditor 
+                initialContent={content} 
+                onChange={setContent} 
+                className="min-h-[60vh]"
+            />
+        )}
+      </main>
     </div>
   );
 }

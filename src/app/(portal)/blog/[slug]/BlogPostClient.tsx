@@ -5,7 +5,7 @@ import { Post } from "@/lib/blog"; // You might need to check where Post type is
 import Link from "next/link";
 import { ArrowLeft, Clock, User, UserCircle2, Hash } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { HtmlRenderer } from "@/components/blog/HtmlRenderer";
+import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
 import { formatDate, getAssetUrl } from "@/lib/utils";
 import { LikeButton } from "@/components/ui/like-button";
 import { CommentSection } from "@/components/ui/comment-section";
@@ -104,7 +104,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
         >
              {/* Article Body */}
              <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-indigo prose-img:rounded-2xl prose-img:shadow-lg">
-                 <HtmlRenderer content={post.content} />
+                 <MarkdownRenderer content={post.content} />
              </div>
 
              {/* Interaction Footer */}

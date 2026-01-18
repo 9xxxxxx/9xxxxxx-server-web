@@ -7,7 +7,7 @@ export const SocialSidebar = () => {
   const socials = [
     {
       name: "GitHub",
-      href: "https://github.com/9xxxxxx/9xxxxxx.github.io",
+      href: "https://github.com/9xxxxxx",
       icon: <Github className="w-5 h-5" />,
     },
     {

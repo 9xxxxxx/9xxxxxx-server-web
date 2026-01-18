@@ -4,37 +4,58 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
+import BubbleMenuExtension from "@tiptap/extension-bubble-menu";
+import FloatingMenuExtension from "@tiptap/extension-floating-menu";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
-import { useCallback, useEffect, useState } from "react";
+import { Markdown } from "tiptap-markdown";
 import {
   Bold,
   Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
+  List,
+  ListOrdered,
   Heading1,
   Heading2,
   Heading3,
-  List,
-  ListOrdered,
-  Quote,
-  Code,
-  Image as ImageIcon,
-  Link as LinkIcon,
   Undo,
   Redo,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Quote,
+  Code,
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Strikethrough,
+  Underline as UnderlineIcon,
   Minus,
   FileCode,
+  Check,
+  Type
 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface TiptapEditorProps {
   initialContent?: string;
   onChange?: (html: string) => void;
   className?: string;
+}
+
+// 浮动菜单按钮
+function MenuButton({ onClick, isActive, children }: any) {
+    return (
+        <button
+            onClick={onClick}
+            className={cn(
+                "p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors",
+                isActive ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30" : "text-slate-600 dark:text-slate-300"
+            )}
+        >
+            {children}
+        </button>
+    )
 }
 
 // 工具栏按钮组件
@@ -57,11 +78,13 @@ function ToolbarButton({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`p-2 rounded-lg transition-all duration-150 ${
+      className={cn(
+        "p-2 rounded-lg transition-all duration-150 flex items-center justify-center min-w-[32px] min-h-[32px]",
         isActive
-          ? "bg-indigo-100 text-indigo-600"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-      } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+          ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400"
+          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200",
+        disabled && "opacity-40 cursor-not-allowed"
+      )}
     >
       {children}
     </button>
@@ -70,7 +93,7 @@ function ToolbarButton({
 
 // 分隔线
 function Divider() {
-  return <div className="w-px h-6 bg-slate-200 mx-1" />;
+  return <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1 self-center" />;
 }
 
 export default function TiptapEditor({
@@ -89,45 +112,74 @@ export default function TiptapEditor({
         heading: {
           levels: [1, 2, 3],
         },
+        dropcursor: {
+             color: '#6366f1',
+             width: 2
+        }
       }),
+      BubbleMenuExtension,
+      FloatingMenuExtension,
       Image.configure({
         HTMLAttributes: {
-          class: "rounded-lg max-w-full mx-auto my-4 shadow-md",
+          class: "rounded-xl shadow-lg my-6 max-w-full mx-auto border border-slate-100 dark:border-slate-800",
         },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-indigo-600 underline hover:text-indigo-800",
+          class: "text-indigo-600 underline decoration-indigo-300 underline-offset-4 hover:text-indigo-800 transition-colors cursor-pointer",
         },
       }),
       Placeholder.configure({
-        placeholder: "开始编写内容... 使用工具栏格式化文本",
+        placeholder: "输入 '/' 打开命令菜单，或直接开始写作...",
         emptyEditorClass: "is-editor-empty",
       }),
       Underline,
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
+      Markdown.configure({
+        html: true, 
+        tightLists: true,
+        tightListClass: "tight",
+        transformPastedText: true,
+        transformCopiedText: true,
+      }),
     ],
     content: initialContent,
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-slate max-w-none min-h-[500px] p-6 focus:outline-none",
-      },
+    onCreate: ({ editor }) => {
+      // @ts-ignore
+      const markdown = editor.storage.markdown.getMarkdown();
+      onChange?.(markdown);
     },
     onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML());
+      // @ts-ignore
+      const markdown = editor.storage.markdown.getMarkdown();
+      onChange?.(markdown);
+    },
+    editorProps: {
+      attributes: {
+        class: cn(
+          "prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[calc(100vh-200px)]", 
+          "prose-headings:font-bold prose-headings:tracking-tight prose-indigo",
+          "prose-img:rounded-xl prose-img:shadow-lg",
+          className
+        ),
+      },
     },
     immediatelyRender: false,
   });
 
-  // 当 initialContent 变化时更新编辑器
+  // 当 initialContent 变化时更新编辑器 (仅在编辑器为空或内容差异极大时？这里简化处理，避免循环)
+  // 注意：如果父组件传入的 initialContent 滞后，可能会导致光标跳变。
+  // 通常 Tiptap 是非受控组件，initialContent 只用一次。但在我们的场景下，为了修复 Bug，我们暂时不监听 initialContent 变化。
+  // 因为我们只在 onCreate 处理了初始值转换。如果这里监听，会重新 setContent。
+  // 如果必须监听，需要 diff。
   useEffect(() => {
-    if (editor && initialContent && editor.getHTML() !== initialContent) {
-      editor.commands.setContent(initialContent);
-    }
+     if (editor && initialContent && editor.isEmpty) {
+        // 只有为空时才重置，避免编辑冲突
+        editor.commands.setContent(initialContent);
+     }
   }, [editor, initialContent]);
 
   // 自动聚焦
@@ -148,6 +200,8 @@ export default function TiptapEditor({
         .extendMarkRange("link")
         .setLink({ href: linkUrl })
         .run();
+    } else {
+      editor.chain().focus().unsetLink().run();
     }
     setShowLinkInput(false);
     setLinkUrl("");
@@ -162,13 +216,10 @@ export default function TiptapEditor({
     setImageUrl("");
   }, [editor, imageUrl]);
 
-  // 图片上传
-  const handleImageUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file || !editor) return;
-
-      try {
+  // 图片上传逻辑
+  const handleImageUpload = useCallback(async (file: File) => {
+       if (!editor) return;
+       try {
         const formData = new FormData();
         formData.append("file", file);
 
@@ -187,356 +238,154 @@ export default function TiptapEditor({
 
         if (!res.ok) throw new Error("Upload failed");
         const data = await res.json();
-
-        // 构建完整 URL
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-        const fullUrl = data.url.startsWith("http")
-          ? data.url
-          : `${baseUrl}${data.url}`;
-
+        const fullUrl = data.url.startsWith("http") ? data.url : `${baseUrl}${data.url}`;
+        
         editor.chain().focus().setImage({ src: fullUrl }).run();
       } catch (error) {
         console.error("Image upload failed:", error);
         alert("图片上传失败");
       }
-    },
-    [editor]
-  );
+  }, [editor]);
+
+  const onImageInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) handleImageUpload(file);
+  }, [handleImageUpload]);
+
 
   if (!editor) {
     return (
       <div className="flex items-center justify-center h-96 bg-slate-50 rounded-xl">
-        <div className="animate-pulse text-slate-400">加载编辑器...</div>
+        <div className="animate-pulse text-slate-400">Loading Editor...</div>
       </div>
     );
   }
 
   return (
-    <div className={`tiptap-editor-wrapper bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>
-      {/* 工具栏 */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-3 py-2 flex flex-wrap items-center gap-0.5">
-        {/* 撤销/重做 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          title="撤销"
-        >
+    <div className="relative">
+      {/* 顶部固定工具栏 */}
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 dark:bg-slate-900/95 py-2 -mx-4 px-4 mb-8 flex flex-wrap items-center gap-1 shadow-sm transition-all">
+        <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="撤销">
           <Undo className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          title="重做"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="重做">
           <Redo className="w-4 h-4" />
         </ToolbarButton>
 
         <Divider />
 
-        {/* 文本样式 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive("bold")}
-          title="粗体 (Ctrl+B)"
-        >
-          <Bold className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive("italic")}
-          title="斜体 (Ctrl+I)"
-        >
-          <Italic className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          isActive={editor.isActive("underline")}
-          title="下划线 (Ctrl+U)"
-        >
-          <UnderlineIcon className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          isActive={editor.isActive("strike")}
-          title="删除线"
-        >
-          <Strikethrough className="w-4 h-4" />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* 标题 */}
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-          isActive={editor.isActive("heading", { level: 1 })}
-          title="标题 1"
-        >
+         {/* 标题下拉或按钮组 */}
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive("heading", { level: 1 })} title="H1">
           <Heading1 className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          isActive={editor.isActive("heading", { level: 2 })}
-          title="标题 2"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive("heading", { level: 2 })} title="H2">
           <Heading2 className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-          isActive={editor.isActive("heading", { level: 3 })}
-          title="标题 3"
-        >
-          <Heading3 className="w-4 h-4" />
-        </ToolbarButton>
 
         <Divider />
 
-        {/* 列表 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive("bulletList")}
-          title="无序列表"
-        >
-          <List className="w-4 h-4" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive("bold")} title="粗体">
+          <Bold className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive("orderedList")}
-          title="有序列表"
-        >
-          <ListOrdered className="w-4 h-4" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive("italic")} title="斜体">
+          <Italic className="w-4 h-4" />
         </ToolbarButton>
-
-        <Divider />
-
-        {/* 对齐 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-          isActive={editor.isActive({ textAlign: "left" })}
-          title="左对齐"
-        >
-          <AlignLeft className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-          isActive={editor.isActive({ textAlign: "center" })}
-          title="居中"
-        >
-          <AlignCenter className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-          isActive={editor.isActive({ textAlign: "right" })}
-          title="右对齐"
-        >
-          <AlignRight className="w-4 h-4" />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* 块元素 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          isActive={editor.isActive("blockquote")}
-          title="引用"
-        >
-          <Quote className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          isActive={editor.isActive("code")}
-          title="行内代码"
-        >
+        
+        <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive("code")} title="Code">
           <Code className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          isActive={editor.isActive("codeBlock")}
-          title="代码块"
-        >
-          <FileCode className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="分隔线"
-        >
-          <Minus className="w-4 h-4" />
-        </ToolbarButton>
 
         <Divider />
 
-        {/* 链接 */}
-        <div className="relative">
-          <ToolbarButton
-            onClick={() => setShowLinkInput(!showLinkInput)}
-            isActive={editor.isActive("link")}
-            title="插入链接"
-          >
-            <LinkIcon className="w-4 h-4" />
-          </ToolbarButton>
-          {showLinkInput && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-20 flex gap-2">
-              <input
-                type="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://..."
-                className="px-2 py-1 text-sm border border-slate-200 rounded w-48"
-                onKeyDown={(e) => e.key === "Enter" && setLink()}
-              />
-              <button
-                onClick={setLink}
-                className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
-              >
-                添加
-              </button>
-            </div>
-          )}
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive("bulletList")} title="列表">
+          <List className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive("orderedList")} title="有序列表">
+          <ListOrdered className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive("blockquote")} title="引用">
+          <Quote className="w-4 h-4" />
+        </ToolbarButton>
+
+        <Divider />
+        
+        {/* 图片与链接 */}
+        <div className="relative group">
+            <ToolbarButton onClick={() => setShowLinkInput(!showLinkInput)} isActive={editor.isActive("link")} title="链接">
+                <LinkIcon className="w-4 h-4" />
+            </ToolbarButton>
+             {showLinkInput && (
+                <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl p-2 z-50 flex gap-2 w-72">
+                  <input
+                    autoFocus
+                    type="url"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    placeholder="粘贴链接..."
+                    className="flex-1 px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 rounded bg-transparent outline-none focus:border-indigo-500"
+                    onKeyDown={(e) => e.key === "Enter" && setLink()}
+                  />
+                  <button onClick={setLink} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700">OK</button>
+                </div>
+              )}
         </div>
 
-        {/* 图片 */}
-        <div className="relative">
-          <ToolbarButton
-            onClick={() => setShowImageInput(!showImageInput)}
-            title="插入图片"
-          >
-            <ImageIcon className="w-4 h-4" />
-          </ToolbarButton>
-          {showImageInput && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-20 w-64">
-              <div className="space-y-2">
-                <label className="block">
-                  <span className="text-xs font-medium text-slate-600">
-                    上传图片
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="mt-1 block w-full text-sm"
-                  />
-                </label>
-                <div className="text-xs text-slate-400 text-center">或</div>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="图片 URL"
-                    className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded"
-                    onKeyDown={(e) => e.key === "Enter" && addImage()}
-                  />
-                  <button
-                    onClick={addImage}
-                    className="px-2 py-1 bg-indigo-600 text-white text-sm rounded"
-                  >
-                    添加
-                  </button>
+        <div className="relative group">
+            <ToolbarButton onClick={() => setShowImageInput(!showImageInput)} title="图片">
+                <ImageIcon className="w-4 h-4" />
+            </ToolbarButton>
+            {showImageInput && (
+                <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl p-4 z-50 w-72">
+                   <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">上传或链接</p>
+                   <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <ImageIcon className="w-6 h-6 text-slate-400 mb-1" />
+                            <p className="text-xs text-slate-500">点击上传图片</p>
+                        </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={onImageInputChange} />
+                   </label>
+                   <div className="relative mt-3">
+                       <input 
+                            type="url" 
+                            placeholder="或输入图片 URL" 
+                            className="w-full pl-3 pr-10 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded bg-transparent outline-none focus:border-indigo-500"
+                            value={imageUrl}
+                            onChange={e => setImageUrl(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && addImage()}
+                        />
+                        <button onClick={addImage} className="absolute right-1 top-1 bottom-1 px-3 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700">Go</button>
+                   </div>
                 </div>
-              </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
 
-      {/* 编辑器内容区 */}
+      {/* Bubble Menu & Floating Menu disabled due to build issues
+      {editor && (
+            <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+               ...
+            </BubbleMenu>
+      )}
+
+      {editor && (
+           <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 ml-[-40px]">
+               ...
+           </FloatingMenu>
+      )}
+      */}
+
+      {/* 编辑器本体 */}
       <EditorContent editor={editor} />
-
-      {/* 样式 */}
+      
+      {/* 补充样式 */}
       <style jsx global>{`
-        .tiptap-editor-wrapper .ProseMirror {
-          min-height: 500px;
-          outline: none;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror p.is-editor-empty:first-child::before {
+        .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
-          color: #9ca3af;
+          color: #94a3b8;
           float: left;
           height: 0;
           pointer-events: none;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror h1 {
-          font-size: 2em;
-          font-weight: 700;
-          margin: 1em 0 0.5em;
-          color: #1e293b;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror h2 {
-          font-size: 1.5em;
-          font-weight: 600;
-          margin: 0.8em 0 0.4em;
-          color: #334155;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror h3 {
-          font-size: 1.25em;
-          font-weight: 600;
-          margin: 0.6em 0 0.3em;
-          color: #475569;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror p {
-          margin: 0.5em 0;
-          line-height: 1.75;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror ul,
-        .tiptap-editor-wrapper .ProseMirror ol {
-          padding-left: 1.5em;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror blockquote {
-          border-left: 4px solid #6366f1;
-          padding-left: 1em;
-          margin: 1em 0;
-          color: #64748b;
-          font-style: italic;
-          background: #f8fafc;
-          padding: 0.5em 1em;
-          border-radius: 0 8px 8px 0;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror code {
-          background: #f1f5f9;
-          padding: 0.2em 0.4em;
-          border-radius: 4px;
-          font-family: "Fira Code", monospace;
-          font-size: 0.9em;
-          color: #e11d48;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror pre {
-          background: #1e293b;
-          color: #e2e8f0;
-          padding: 1em;
-          border-radius: 8px;
-          overflow-x: auto;
-          margin: 1em 0;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror pre code {
-          background: transparent;
-          color: inherit;
-          padding: 0;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror hr {
-          border: none;
-          border-top: 2px solid #e2e8f0;
-          margin: 2em 0;
-        }
-
-        .tiptap-editor-wrapper .ProseMirror img {
-          max-width: 100%;
-          height: auto;
         }
       `}</style>
     </div>

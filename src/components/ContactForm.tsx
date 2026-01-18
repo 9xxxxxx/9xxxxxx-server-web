@@ -53,7 +53,7 @@ export function ContactForm() {
     <section className="py-24 relative overflow-hidden">
       <div className="max-w-3xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+          <h2 className="text-3xl md:text-5xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 py-1 leading-tight">
             Let's create something together.
           </h2>
           <p className="text-lg text-slate-500 max-w-xl mx-auto">

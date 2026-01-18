@@ -13,6 +13,7 @@ import { GlobalBackground } from "@/components/GlobalBackground";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { CommandMenu } from "@/components/CommandMenu";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -48,6 +49,7 @@ export default function RootLayout({
           </main>
           
           <ScrollToTop />
+          <Toaster position="top-center" richColors />
           <Footer />
         </ThemeProvider>
       </body>

@@ -58,7 +58,11 @@ tar.exe -czf backend.tar.gz --exclude="database.db" --exclude="static/uploads" -
 
 # 3. 上传到服务器
 Write-Host "📤 正在上传文件至服务器..." -ForegroundColor Yellow
-scp -o ConnectTimeout=60 out.tar.gz backend.tar.gz "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
+scp -o ConnectTimeout=600 out.tar.gz "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
+if ($LASTEXITCODE -ne 0) { throw "上传前端代码失败" }
+
+scp -o ConnectTimeout=600 backend.tar.gz "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
+if ($LASTEXITCODE -ne 0) { throw "上传后端代码失败" }
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ 文件上传失败！" -ForegroundColor Red

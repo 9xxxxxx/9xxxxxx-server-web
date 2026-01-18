@@ -7,7 +7,7 @@ export const SocialLinks = () => {
   return (
     <div className="w-full flex justify-center items-center py-6 gap-6 relative z-50">
       <Link 
-        href="https://github.com/9xxxxxx/9xxxxxx.github.io" 
+        href="https://github.com/9xxxxxx" 
         target="_blank" 
         className="p-3 rounded-full bg-card border border-border shadow-sm hover:scale-110 hover:border-primary transition-all duration-200 group"
         aria-label="GitHub"

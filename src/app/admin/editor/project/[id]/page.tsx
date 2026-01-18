@@ -1,56 +1,39 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
-import dynamic from "next/dynamic";
-import Link from "next/link";
+import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api-client";
 import { getAssetUrl } from "@/lib/utils";
-import {
-  ArrowLeft,
-  Save,
-  Loader2,
-  Image as ImageIcon,
-  X,
-  ChevronRight,
-  ChevronLeft,
-  Eye,
-  EyeOff,
-  Plus,
-  Github,
-  ExternalLink,
-} from "lucide-react";
-import CategorySelector from "@/components/admin/CategorySelector";
+import TiptapEditor from "@/components/editor/TiptapEditor";
+import { ArrowLeft, Save, Settings, Loader2, Image as ImageIcon, Briefcase, Github, ExternalLink, Plus, X as XIcon, Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import TextareaAutosize from 'react-textarea-autosize';
 import ImageCropper from "@/components/admin/ImageCropper";
-import EditorHelp from "@/components/editor/EditorHelp";
+import { toast } from "sonner";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
-const TiptapEditor = dynamic(
-  () => import("@/components/editor/TiptapEditor"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-96 bg-slate-50 rounded-xl">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-500 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">加载编辑器...</p>
-        </div>
-      </div>
-    ),
-  }
-);
+interface EditorPageProps {
+  params: Promise<{ id: string }>;
+}
 
-export default function ProjectEditorPage() {
+export default function ProjectEditorPage({ params }: EditorPageProps) {
   const router = useRouter();
-  const params = useParams();
-  const projectId = params.id as string;
-  const isEditing = projectId !== "new";
+  const resolvedParams = use(params);
+  const projectId = resolvedParams.id;
+  const isNew = projectId === "new";
 
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(isEditing);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [editorReady, setEditorReady] = useState(!isEditing);
-
-  // 表单状态
+  const [isLoading, setIsLoading] = useState(!isNew);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  
+  // Data State
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
@@ -61,486 +44,299 @@ export default function ProjectEditorPage() {
   const [demoLink, setDemoLink] = useState("");
   const [published, setPublished] = useState(true);
   const [visibility, setVisibility] = useState("public");
-
-  // 数组状态
+  
+  // Array State
   const [techStack, setTechStack] = useState<string[]>([]);
   const [features, setFeatures] = useState<string[]>([]);
   const [newTech, setNewTech] = useState("");
   const [newFeature, setNewFeature] = useState("");
 
-  // 图片裁剪状态
+  // Image Cropping
   const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
 
-  // 加载现有项目
   useEffect(() => {
-    if (isEditing) {
-      fetchAPI(`/api/projects/id/${projectId}`)
-        .then((project: any) => {
-          setTitle(project.title || "");
-          setSlug(project.slug || "");
-          setDescription(project.description || "");
-          setCategory(project.category || "Web App");
-          setImage(project.image || "");
-          setGithubLink(project.githubLink || "");
-          setDemoLink(project.demoLink || "");
-          setPublished(project.published ?? true);
-          setVisibility(project.visibility || "public");
-          setTechStack(project.techStack || []);
-          setFeatures(project.features || []);
-          setFullDescription(project.fullDescription || "");
-          setEditorReady(true);
+    if (!isNew) {
+        fetchAPI(`/api/projects/id/${projectId}`)
+        .then((data: any) => {
+            setTitle(data.title);
+            setSlug(data.slug);
+            setDescription(data.description || "");
+            setFullDescription(data.fullDescription || "");
+            setCategory(data.category || "Web App");
+            setImage(data.image || "");
+            setGithubLink(data.githubLink || "");
+            setDemoLink(data.demoLink || "");
+            setPublished(data.published ?? true);
+            setVisibility(data.visibility || "public");
+            setTechStack(data.techStack || []);
+            setFeatures(data.features || []);
+            document.title = `编辑: ${data.title}`;
         })
-        .catch((err) => {
-          console.error("Failed to load project:", err);
-          alert("加载项目失败，可能项目不存在");
-          router.push("/admin/projects");
+        .catch(err => {
+            console.error(err);
+            toast.error("加载项目失败");
+            router.push("/admin/projects");
         })
-        .finally(() => setInitialLoading(false));
+        .finally(() => setIsLoading(false));
+    } else {
+        document.title = "新建项目";
     }
-  }, [isEditing, projectId, router]);
+  }, [projectId, isNew, router]);
 
-  // 动态更新页面标题
+  // Sync title
   useEffect(() => {
-    document.title = title ? `编辑: ${title}` : (isEditing ? "加载中..." : "新建项目");
-  }, [title, isEditing]);
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setTitle(val);
-    if (!isEditing && !slug) {
-      setSlug(
-        val
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "")
-      );
-    }
-  };
-
-  const handleEditorChange = useCallback((html: string) => {
-    setFullDescription(html);
-  }, []);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const tempUrl = URL.createObjectURL(file);
-    setTempImageUrl(tempUrl);
-    setShowCropper(true);
-  };
-
-  const handleCropComplete = async (croppedImageUrl: string) => {
-    try {
-      setLoading(true);
-      const blob = await fetch(croppedImageUrl).then((r) => r.blob());
-      const file = new File([blob], "project-cover.jpg", {
-        type: "image/jpeg",
-      });
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const token = JSON.parse(
-        localStorage.getItem("admin-auth-storage") || "{}"
-      )?.state?.accessToken;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/upload`,
-        {
-          method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData,
-        }
-      );
-
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setImage(data.url);
-      setShowCropper(false);
-      setTempImageUrl(null);
-    } catch {
-      alert("封面图上传失败");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async (publish: boolean = true) => {
-    if (!title.trim()) {
-      alert("请输入项目名称");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const payload = {
-        title,
-        slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        description,
-        fullDescription,
-        category,
-        image,
-        githubLink,
-        demoLink,
-        techStack,
-        features,
-        published: publish,
-        visibility,
-      };
-
-      if (isEditing) {
-        await fetchAPI(`/api/projects/${projectId}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-      } else {
-        await fetchAPI("/api/projects", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
+      if (title && isNew && !slug) {
+         setSlug(title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
       }
+      if (title) document.title = `${isNew ? '新建' : '编辑'}: ${title}`;
+  }, [title, isNew, slug]);
 
-      router.push("/admin/projects");
-      router.refresh();
-    } catch (error) {
-      alert("保存失败");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+  const handleSave = async (publishStatus: boolean) => {
+      if (!title) return toast.error("请输入项目名称");
+      setIsSaving(true);
+      try {
+        const payload = {
+            title,
+            slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            description,
+            fullDescription, // Markdown content
+            category,
+            image,
+            githubLink,
+            demoLink,
+            techStack,
+            features,
+            published: publishStatus,
+            visibility,
+        };
+
+        const url = isNew ? "/api/projects" : `/api/projects/${projectId}`;
+        const method = isNew ? "POST" : "PUT";
+        
+        await fetchAPI(url, { method, body: JSON.stringify(payload) });
+        toast.success(publishStatus ? "已发布！" : "草稿已保存");
+        
+        if (isNew) {
+             router.push("/admin/projects");
+             router.refresh();
+        } else {
+            router.refresh();
+        }
+      } catch(e) {
+          console.error(e);
+          toast.error("保存失败");
+      } finally {
+          setIsSaving(false);
+      }
   };
 
-  const addTech = () => {
-    if (newTech.trim()) {
-      setTechStack([...techStack, newTech.trim()]);
-      setNewTech("");
-    }
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          setTempImageUrl(URL.createObjectURL(file));
+          setIsSheetOpen(false); // 关键：关闭侧边栏
+          setShowCropper(true);  // 打开裁剪
+      }
+  };
+  
+  const handleCropComplete = async (croppedUrl: string) => {
+      try {
+         const blob = await fetch(croppedUrl).then(r => r.blob());
+         const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+         const formData = new FormData();
+         formData.append("file", file);
+         
+         const token = JSON.parse(localStorage.getItem("admin-auth-storage") || "{}")?.state?.accessToken;
+         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/upload`, {
+             method: "POST",
+             headers: token ? { Authorization: `Bearer ${token}` } : {},
+             body: formData
+         });
+         if (!res.ok) throw new Error("Upload failed");
+         const data = await res.json();
+         setImage(data.url);
+         setShowCropper(false);
+         toast.success("封面图已更新");
+         setIsSheetOpen(true); // 可选：裁剪完重新打开设置
+      } catch(e) {
+          toast.error("封面图上传失败");
+      }
   };
 
-  const addFeature = () => {
-    if (newFeature.trim()) {
-      setFeatures([...features, newFeature.trim()]);
-      setNewFeature("");
-    }
-  };
-
-  if (initialLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-purple-500 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium">加载项目...</p>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600"/></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* 主编辑区 */}
-      <div className="flex-1 flex flex-col">
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/admin/projects"
-                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
-              </Link>
-              <div>
-                <h1 className="font-bold text-lg text-slate-800">
-                  {isEditing ? "编辑项目" : "新建项目"}
-                </h1>
-                <p className="text-xs text-slate-400">使用工具栏格式化内容</p>
-              </div>
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+         <div className="flex items-center gap-4">
+            <Link href="/admin/projects" className="text-slate-500 hover:text-slate-900 p-2 -ml-2 rounded-lg hover:bg-slate-100">
+                <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+                 {isNew ? '新建项目' : (published ? <span className="text-green-600 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"/>已发布</span> : <span className="text-amber-600 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500"/>草稿</span>)}
             </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleSave(false)}
-                disabled={loading}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
-              >
-                保存草稿
-              </button>
-              <button
-                onClick={() => handleSave(true)}
-                disabled={loading}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold hover:from-purple-600 hover:to-pink-600 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-purple-200"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                发布
-              </button>
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors"
-              >
-                {sidebarOpen ? (
-                  <ChevronRight className="w-5 h-5 text-slate-600" />
-                ) : (
-                  <ChevronLeft className="w-5 h-5 text-slate-600" />
-                )}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* 标题输入 */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <input
-                type="text"
-                value={title}
-                onChange={handleTitleChange}
-                placeholder="输入项目名称..."
-                className="w-full text-3xl font-bold bg-transparent border-0 outline-none placeholder:text-slate-300"
-                autoFocus={!isEditing}
-              />
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="添加简短描述（可选）..."
-                rows={2}
-                className="w-full mt-4 text-slate-500 bg-transparent border-0 outline-none resize-none placeholder:text-slate-300"
-              />
-            </div>
-
-            {/* TipTap 编辑器 */}
-            {editorReady && (
-              <TiptapEditor
-                initialContent={fullDescription}
-                onChange={handleEditorChange}
-              />
-            )}
-          </div>
-        </main>
-      </div>
-
-      {/* 侧边栏 */}
-      <aside
-        className={`w-80 border-l border-slate-200 bg-white flex-shrink-0 transition-all duration-300 overflow-y-auto ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "translate-x-full absolute right-0 h-full"
-        }`}
-      >
-        <div className="p-6 space-y-6">
-          <h3 className="font-bold text-lg text-slate-800">项目设置</h3>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">URL Slug</label>
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono focus:border-purple-300 focus:ring focus:ring-purple-100 transition-all"
-              placeholder="project-slug"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">分类</label>
-            <CategorySelector
-              value={category}
-              onChange={setCategory}
-              placeholder="选择分类..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">技术栈</label>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {techStack.map((tech, i) => (
-                <span
-                  key={i}
-                  className="px-2.5 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium flex items-center gap-1"
-                >
-                  {tech}
-                  <button
-                    onClick={() =>
-                      setTechStack(techStack.filter((_, idx) => idx !== i))
-                    }
-                    className="hover:text-purple-900"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-1">
-              <input
-                type="text"
-                value={newTech}
-                onChange={(e) => setNewTech(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addTech())
-                }
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-purple-300"
-                placeholder="添加技术..."
-              />
-              <button
-                onClick={addTech}
-                className="p-2 rounded-xl bg-purple-100 text-purple-600 hover:bg-purple-200"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">功能特性</label>
-            <div className="space-y-1 mb-2">
-              {features.map((feat, i) => (
-                <div
-                  key={i}
-                  className="px-3 py-2 bg-slate-100 rounded-lg text-sm flex items-center justify-between"
-                >
-                  {feat}
-                  <button
-                    onClick={() =>
-                      setFeatures(features.filter((_, idx) => idx !== i))
-                    }
-                    className="text-slate-400 hover:text-red-500"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-1">
-              <input
-                type="text"
-                value={newFeature}
-                onChange={(e) => setNewFeature(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addFeature())
-                }
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-purple-300"
-                placeholder="添加特性..."
-              />
-              <button
-                onClick={addFeature}
-                className="p-2 rounded-xl bg-purple-100 text-purple-600 hover:bg-purple-200"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">GitHub</label>
-            <div className="flex items-center gap-2">
-              <Github className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <input
-                type="url"
-                value={githubLink}
-                onChange={(e) => setGithubLink(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm"
-                placeholder="https://github.com/..."
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Demo</label>
-            <div className="flex items-center gap-2">
-              <ExternalLink className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <input
-                type="url"
-                value={demoLink}
-                onChange={(e) => setDemoLink(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm"
-                placeholder="https://..."
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">可见性</label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setVisibility("public")}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  visibility === "public"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-200"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                <Eye className="w-4 h-4" />
-                公开
-              </button>
-              <button
-                type="button"
-                onClick={() => setVisibility("login_required")}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  visibility === "login_required"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-200"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                <EyeOff className="w-4 h-4" />
-                登录可见
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">封面图</label>
-            {image ? (
-              <div className="relative rounded-xl overflow-hidden aspect-video border border-slate-200 shadow-sm">
-                <img
-                  src={getAssetUrl(image)}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setImage("")}
-                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <label className="block w-full cursor-pointer group">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
-                <div className="w-full h-32 rounded-xl border-2 border-dashed border-slate-200 hover:border-purple-400 hover:bg-purple-50 transition-all flex flex-col items-center justify-center text-slate-400 group-hover:text-purple-500">
-                  <ImageIcon className="w-8 h-8 mb-2" />
-                  <span className="text-xs font-bold uppercase">上传封面</span>
-                </div>
-              </label>
-            )}
-          </div>
         </div>
-      </aside>
 
-      {showCropper && tempImageUrl && (
-        <ImageCropper
-          imageSrc={tempImageUrl}
-          onComplete={handleCropComplete}
-          onCancel={() => {
-            setShowCropper(false);
-            setTempImageUrl(null);
-          }}
-          aspect={16 / 9}
-          shape="rect"
+        <div className="flex items-center gap-3">
+             <button onClick={() => handleSave(false)} disabled={isSaving} className="text-slate-500 hover:text-slate-900 text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-50">保存草稿</button>
+             <button 
+                onClick={() => handleSave(true)}
+                disabled={isSaving}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-slate-800 transition-all hover:shadow-lg disabled:opacity-50"
+             >
+                {isSaving ? <Loader2 className="w-3 h-3 animate-spin"/> : <Save className="w-3 h-3" />}
+                发布
+             </button>
+
+             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                 <SheetTrigger asChild>
+                    <button className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
+                        <Settings className="w-5 h-5" />
+                    </button>
+                 </SheetTrigger>
+                 <SheetContent className="overflow-y-auto sm:max-w-md p-6">
+                     <SheetHeader>
+                         <SheetTitle>项目设置</SheetTitle>
+                         <SheetDescription>配置项目元数据</SheetDescription>
+                     </SheetHeader>
+                     
+                     <div className="mt-6 space-y-6">
+                         {/* Slug */}
+                         <div className="space-y-2">
+                             <label className="text-xs font-bold uppercase text-slate-500">URL Slug</label>
+                             <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 focus:bg-white outline-none" />
+                         </div>
+                         
+                         {/* Category */}
+                         <div className="space-y-2">
+                             <label className="text-xs font-bold uppercase text-slate-500">类别</label>
+                             <input type="text" value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 focus:bg-white outline-none" />
+                         </div>
+
+                         {/* Image */}
+                         <div className="space-y-2">
+                             <label className="text-xs font-bold uppercase text-slate-500">封面图</label>
+                             {image ? (
+                                 <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 group">
+                                     <img src={getAssetUrl(image)} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                         <button onClick={() => setImage("")} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white">
+                                             <XIcon className="w-4 h-4"/>
+                                         </button>
+                                          <label className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white cursor-pointer">
+                                             <ImageIcon className="w-4 h-4"/>
+                                             <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                                         </label>
+                                     </div>
+                                 </div>
+                             ) : (
+                                 <label className="block w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all group">
+                                     <div className="p-3 bg-slate-100 rounded-full mb-2 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                         <ImageIcon className="w-6 h-6 text-slate-400 group-hover:text-indigo-600"/>
+                                     </div>
+                                     <span className="text-xs font-medium text-slate-500 group-hover:text-indigo-600">点击上传封面</span>
+                                     <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                                 </label>
+                             )}
+                         </div>
+
+                         {/* Tech Stack */}
+                         <div className="space-y-2">
+                             <label className="text-xs font-bold uppercase text-slate-500">技术栈</label>
+                             <div className="flex gap-2 mb-2">
+                                 <input type="text" value={newTech} onChange={e => setNewTech(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), newTech.trim() && (setTechStack([...techStack, newTech]), setNewTech(""))) } className="flex-1 px-3 py-2 border rounded-lg text-sm bg-slate-50 focus:bg-white outline-none" placeholder="添加技术..." />
+                                 <button onClick={() => newTech.trim() && (setTechStack([...techStack, newTech]), setNewTech(""))} className="p-2 bg-slate-100 rounded-lg"><Plus className="w-4 h-4"/></button>
+                             </div>
+                             <div className="flex flex-wrap gap-1">
+                                 {techStack.map((t, i) => (
+                                     <span key={i} className="px-2 py-1 bg-indigo-50 text-indigo-600 text-xs rounded-md flex items-center gap-1">
+                                         {t} <XIcon className="w-3 h-3 cursor-pointer hover:text-red-500" onClick={() => setTechStack(techStack.filter((_, idx) => idx !== i))}/>
+                                     </span>
+                                 ))}
+                             </div>
+                         </div>
+                         
+                         {/* Features */}
+                         <div className="space-y-2">
+                             <label className="text-xs font-bold uppercase text-slate-500">功能特性</label>
+                             <div className="flex gap-2 mb-2">
+                                 <input type="text" value={newFeature} onChange={e => setNewFeature(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), newFeature.trim() && (setFeatures([...features, newFeature]), setNewFeature(""))) } className="flex-1 px-3 py-2 border rounded-lg text-sm bg-slate-50 focus:bg-white outline-none" placeholder="添加特性..." />
+                                 <button onClick={() => newFeature.trim() && (setFeatures([...features, newFeature]), setNewFeature(""))} className="p-2 bg-slate-100 rounded-lg"><Plus className="w-4 h-4"/></button>
+                             </div>
+                             <div className="space-y-1">
+                                 {features.map((f, i) => (
+                                     <div key={i} className="px-2 py-1 bg-slate-50 text-slate-600 text-xs rounded-md flex items-center justify-between">
+                                         {f} <XIcon className="w-3 h-3 cursor-pointer hover:text-red-500" onClick={() => setFeatures(features.filter((_, idx) => idx !== i))}/>
+                                     </div>
+                                 ))}
+                             </div>
+                         </div>
+
+                         {/* Links */}
+                          <div className="space-y-2">
+                             <label className="text-xs font-bold uppercase text-slate-500">链接</label>
+                             <div className="flex items-center gap-2">
+                                <Github className="w-4 h-4 text-slate-400"/>
+                                <input type="url" value={githubLink} onChange={e => setGithubLink(e.target.value)} placeholder="GitHub URL" className="flex-1 px-3 py-2 border rounded-lg text-sm bg-slate-50 focus:bg-white outline-none" />
+                             </div>
+                             <div className="flex items-center gap-2">
+                                <ExternalLink className="w-4 h-4 text-slate-400"/>
+                                <input type="url" value={demoLink} onChange={e => setDemoLink(e.target.value)} placeholder="Demo URL" className="flex-1 px-3 py-2 border rounded-lg text-sm bg-slate-50 focus:bg-white outline-none" />
+                             </div>
+                         </div>
+
+                         {/* Visibility */}
+                          <div className="space-y-2">
+                             <label className="text-xs font-bold uppercase text-slate-500">可见性</label>
+                             <div className="flex gap-2">
+                                 <button onClick={() => setVisibility("public")} className={`flex-1 py-2 text-xs font-bold rounded-lg ${visibility === 'public' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-50 text-slate-500'}`}>公开</button>
+                                 <button onClick={() => setVisibility("login_required")} className={`flex-1 py-2 text-xs font-bold rounded-lg ${visibility === 'login_required' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-50 text-slate-500'}`}>登录可见</button>
+                             </div>
+                         </div>
+                     </div>
+                 </SheetContent>
+             </Sheet>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto py-12 px-6 sm:px-8">
+         <TextareaAutosize
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="项目名称"
+            className="w-full resize-none bg-transparent text-4xl sm:text-5xl font-extrabold text-slate-900 placeholder:text-slate-300 outline-none mb-4 leading-tight"
+            minRows={1}
         />
-      )}
+        <TextareaAutosize
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="一句话描述这个项目..."
+            className="w-full resize-none bg-transparent text-xl font-medium text-slate-500 placeholder:text-slate-200 outline-none mb-10 leading-normal"
+            minRows={1}
+        />
+        
+        <TiptapEditor 
+            initialContent={fullDescription}
+            onChange={setFullDescription}
+            className="min-h-[60vh]"
+        />
+      </main>
 
-      <EditorHelp />
+      {/* Image Cropper */}
+      {showCropper && tempImageUrl && (
+         <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+             <div className="bg-white rounded-xl overflow-hidden shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-100">
+                 <ImageCropper 
+                    imageSrc={tempImageUrl} 
+                    onComplete={handleCropComplete} 
+                    onCancel={() => { setShowCropper(false); setTempImageUrl(null); setIsSheetOpen(true); }}
+                    aspect={16/9}
+                 />
+             </div>
+         </div>
+      )}
     </div>
   );
 }

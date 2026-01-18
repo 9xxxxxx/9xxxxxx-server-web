@@ -62,6 +62,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
+  // Immersive Editor Mode: Skip Admin Layout
+  if (pathname.includes("/admin/editor/")) {
+    return <>{children}</>;
+  }
+
   // Prevent flash of content if not auth
   if (!accessToken) return null;
 

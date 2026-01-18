@@ -111,7 +111,7 @@ export function Navbar({ config }: NavbarProps) {
 
         {/* Actions (Right) */}
         <div className="flex items-center gap-2 pr-2">
-             <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all group" aria-label="GitHub">
+             <a href="https://github.com/9xxxxxx" target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all group" aria-label="GitHub">
                 <Github className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
              </a>
              <button 
