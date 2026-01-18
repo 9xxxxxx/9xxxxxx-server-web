@@ -34,7 +34,7 @@ import {
   Check,
   Type
 } from "lucide-react";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { configureSlashCommand } from "./extensions/slashCommand";
 import EditorHelp from "./EditorHelp";
@@ -213,9 +213,13 @@ export default function TiptapEditor({
      }
   }, [editor, initialContent]);
 
-  // 自动聚焦
+  // 使用 ref 追踪是否已经自动聚焦过，防止重复触发
+  const hasFocused = useRef(false);
+
+  // 自动聚焦 - 只在首次 editor 准备好时执行一次
   useEffect(() => {
-    if (editor && !editor.isDestroyed && editor.view) {
+    if (editor && !editor.isDestroyed && editor.view && !hasFocused.current) {
+      hasFocused.current = true;
       setTimeout(() => {
         if (!editor.isDestroyed && editor.view) {
           editor.commands.focus();
