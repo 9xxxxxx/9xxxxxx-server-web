@@ -40,61 +40,69 @@ export function GlobalBackground() {
   }, [pathname]);
 
   // Definition of themes based on routes & scroll state
-  const getTheme = () => {
-    // Theme Definitions
-    const projectsTheme = {
-       blob1: "bg-slate-200/50", 
-       blob2: "bg-blue-200/50",
-       blob3: "bg-cyan-100/50",
-       blob4: "bg-indigo-100/50",
+    const [colorIndices, setColorIndices] = useState([0, 1, 2, 3]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setColorIndices(prev => [
+                (prev[0] + 1) % 4, // 简单轮播，或者随机
+                (prev[1] + 1) % 5,
+                (prev[2] + 1) % 4,
+                (prev[3] + 1) % 5
+            ]);
+        }, 4000); // 4秒变一次
+        return () => clearInterval(interval);
+    }, []);
+
+    // 预定义色板
+    const palettes = {
+        hero: [
+            "bg-emerald-300/40", "bg-purple-300/40", "bg-orange-200/50", "bg-indigo-100/40",
+            "bg-teal-200/40", "bg-fuchsia-300/30", "bg-amber-200/40", "bg-violet-200/40"
+        ],
+        projects: [
+            "bg-slate-200/50", "bg-blue-200/50", "bg-cyan-100/50", "bg-indigo-100/50",
+            "bg-sky-200/40", "bg-blue-300/30"
+        ],
+        blog: [
+            "bg-indigo-200/50", "bg-rose-200/50", "bg-slate-200/50", "bg-blue-200/50",
+            "bg-red-200/30", "bg-indigo-300/30"
+        ],
+        about: [
+             "bg-emerald-200/50", "bg-teal-200/50", "bg-amber-100/60", "bg-lime-100/50"
+        ]
     };
 
-    const blogTheme = {
-        blob1: "bg-indigo-200/50",
-        blob2: "bg-rose-200/50",
-        blob3: "bg-slate-200/50",
-        blob4: "bg-blue-200/50",
+    const getActivePalette = () => {
+        if (pathname.startsWith("/projects")) return palettes.projects;
+        if (pathname.startsWith("/blog")) return palettes.blog;
+        if (pathname.startsWith("/about")) return palettes.about;
+        
+        if (pathname === "/") {
+            if (homeSection === "projects") return palettes.projects;
+            if (homeSection === "blog") return palettes.blog;
+            return palettes.hero;
+        }
+        return palettes.hero;
     };
 
-    const aboutTheme = {
-        blob1: "bg-emerald-200/50",
-        blob2: "bg-teal-200/50",
-        blob3: "bg-amber-100/60",
-        blob4: "bg-lime-100/50",
-    };
-
-    const homeHeroTheme = {
-        blob1: "bg-orange-300/60",
-        blob2: "bg-indigo-300/60",
-        blob3: "bg-pink-200/50",
-        blob4: "bg-cyan-200/40",
-    };
-
-    // Route Matching
-    if (pathname.startsWith("/projects")) return projectsTheme;
-    if (pathname.startsWith("/blog")) return blogTheme;
-    if (pathname.startsWith("/about")) return aboutTheme;
+    const activePalette = getActivePalette();
     
-    // Home Page Logic
-    if (pathname === "/") {
-        if (homeSection === "projects") return projectsTheme;
-        if (homeSection === "blog") return blogTheme;
-        return homeHeroTheme;
-    }
+    // 确保取模安全
+    const theme = {
+        blob1: activePalette[colorIndices[0] % activePalette.length],
+        blob2: activePalette[(colorIndices[1] + 1) % activePalette.length],
+        blob3: activePalette[(colorIndices[2] + 2) % activePalette.length],
+        blob4: activePalette[(colorIndices[3] + 3) % activePalette.length],
+    };
 
-    // Default Fallback
-    return homeHeroTheme;
-  };
-
-  const theme = getTheme();
-
-  // Helper to determine active base gradient
-  const getBaseGradient = () => {
-      // Projects (Route or Home Section)
+    // Helper to determine active base gradient (Keep existing logic or adjust)
+    const getBaseGradient = () => {
+      // Projects
       if (pathname.startsWith("/projects") || (pathname === "/" && homeSection === "projects")) {
           return "bg-gradient-to-br from-slate-50 to-blue-50/30";
       }
-      // Blog (Route or Home Section)
+      // Blog
       if (pathname.startsWith("/blog") || (pathname === "/" && homeSection === "blog")) {
           return "bg-gradient-to-br from-slate-50 to-indigo-50/30";
       }
@@ -102,26 +110,26 @@ export function GlobalBackground() {
       if (pathname.startsWith("/about")) {
           return "bg-gradient-to-br from-stone-50 to-emerald-50/40";
       }
-      // Default / Hero
+      // Hero (Green/Purple/Orange tint base)
       return "bg-[#f5f5f4]";
   };
 
   return (
-    <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none transition-all duration-1000 ease-in-out">
+    <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none transition-all duration-[3000ms] ease-in-out">
       {/* Base Gradient */}
       <div className={cn(
-        "absolute inset-0 transition-colors duration-1000",
+        "absolute inset-0 transition-colors duration-[3000ms]",
         getBaseGradient()
       )} />
 
       {/* Blobs with smooth color transitions */}
-      <div className={cn("absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob transition-colors duration-1000", theme.blob1)} />
+      <div className={cn("absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob transition-colors duration-[3000ms]", theme.blob1)} />
       
-      <div className={cn("absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob animation-delay-2000 transition-colors duration-1000", theme.blob2)} />
+      <div className={cn("absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob animation-delay-2000 transition-colors duration-[3000ms]", theme.blob2)} />
       
-      <div className={cn("absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob animation-delay-4000 transition-colors duration-1000", theme.blob3)} />
+      <div className={cn("absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob animation-delay-4000 transition-colors duration-[3000ms]", theme.blob3)} />
       
-      <div className={cn("absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob animation-delay-2000 opacity-70 transition-colors duration-1000", theme.blob4)} />
+      <div className={cn("absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[100px] mix-blend-multiply filter animate-blob animation-delay-2000 opacity-70 transition-colors duration-[3000ms]", theme.blob4)} />
     </div>
   );
 }
