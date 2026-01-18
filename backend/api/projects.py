@@ -53,8 +53,9 @@ from models import User, ProjectCreate, ProjectUpdate
 
 @router.post("/", response_model=Project)
 def create_project(project_in: ProjectCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
-    project = Project.from_orm(project_in)
-    project.authorId = current_user.id
+    project_data = project_in.model_dump()
+    project_data["authorId"] = current_user.id
+    project = Project(**project_data)
     session.add(project)
     session.commit()
     session.refresh(project)
@@ -66,7 +67,7 @@ def update_project(id: str, project_in: ProjectUpdate, session: Session = Depend
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    data_dict = project_in.dict(exclude_unset=True)
+    data_dict = project_in.model_dump(exclude_unset=True)
     for key, value in data_dict.items():
         setattr(project, key, value)
             

@@ -94,8 +94,9 @@ from models import PostCreate, PostUpdate
 
 @router.post("/", response_model=Post)
 def create_post(post_in: PostCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
-    post = Post.from_orm(post_in)
-    post.authorId = current_user.id
+    post_data = post_in.model_dump()
+    post_data["authorId"] = current_user.id
+    post = Post(**post_data)
     session.add(post)
     session.commit()
     session.refresh(post)
@@ -108,7 +109,7 @@ def update_post(id: str, post_in: PostUpdate, session: Session = Depends(get_ses
         raise HTTPException(status_code=404, detail="Post not found")
     
     # Update fields
-    post_data_dict = post_in.dict(exclude_unset=True)
+    post_data_dict = post_in.model_dump(exclude_unset=True)
     for key, value in post_data_dict.items():
         setattr(post, key, value)
             

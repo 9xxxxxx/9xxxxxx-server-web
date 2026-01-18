@@ -168,6 +168,8 @@ export default function TiptapEditor({
         tightListClass: "tight",
         transformPastedText: true,
         transformCopiedText: true,
+        // 禁用 tiptap-markdown 内置的 link 和 underline 扩展以避免重复
+        linkify: false,
       }),
       configureSlashCommand(),
   ], []);
