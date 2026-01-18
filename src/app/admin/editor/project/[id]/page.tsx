@@ -141,25 +141,44 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
   };
   
   const handleCropComplete = async (croppedUrl: string) => {
+      console.log("[Project] handleCropComplete called with:", croppedUrl);
       try {
-         const blob = await fetch(croppedUrl).then(r => r.blob());
+         console.log("[Project] Step 1: Fetching blob from croppedUrl...");
+         const blobRes = await fetch(croppedUrl);
+         const blob = await blobRes.blob();
+         console.log("[Project] Step 2: Blob fetched, size:", blob.size);
+         
          const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
          const formData = new FormData();
          formData.append("file", file);
+         console.log("[Project] Step 3: FormData created with file");
          
          const token = JSON.parse(localStorage.getItem("admin-auth-storage") || "{}")?.state?.accessToken;
+         console.log("[Project] Step 4: Token exists:", !!token);
+         
+         console.log("[Project] Step 5: Sending POST to /api/upload...");
          const res = await fetch("/api/upload", {
              method: "POST",
              headers: token ? { Authorization: `Bearer ${token}` } : {},
              body: formData
          });
-         if (!res.ok) throw new Error("Upload failed");
+         console.log("[Project] Step 6: Upload response status:", res.status);
+         
+         if (!res.ok) {
+           const errorText = await res.text();
+           console.error("[Project] Upload failed:", errorText);
+           throw new Error("Upload failed: " + errorText);
+         }
+         
          const data = await res.json();
+         console.log("[Project] Step 7: Upload success, url:", data.url);
+         
          setImage(data.url);
          setShowCropper(false);
          toast.success("封面图已更新");
-         setIsSheetOpen(true); // 可选：裁剪完重新打开设置
+         setIsSheetOpen(true);
       } catch(e) {
+          console.error("[Project] handleCropComplete error:", e);
           toast.error("封面图上传失败");
       }
   };
