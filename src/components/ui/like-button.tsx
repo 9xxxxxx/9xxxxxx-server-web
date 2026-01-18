@@ -9,9 +9,10 @@ interface LikeButtonProps {
   initialLikes: number;
   projectId?: string;
   postId?: string;
+  className?: string;
 }
 
-export function LikeButton({ initialLikes, projectId, postId }: LikeButtonProps) {
+export function LikeButton({ initialLikes, projectId, postId, className }: LikeButtonProps) {
   const [likes, setLikes] = useState(initialLikes);
   const [hasLiked, setHasLiked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +56,8 @@ export function LikeButton({ initialLikes, projectId, postId }: LikeButtonProps)
         "group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300",
         hasLiked 
           ? "bg-rose-500/10 text-rose-600 cursor-default" 
-          : "bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 text-slate-600 dark:text-slate-300 hover:text-rose-600"
+          : "bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 text-slate-600 dark:text-slate-300 hover:text-rose-600",
+        className
       )}
     >
       <div className="relative">

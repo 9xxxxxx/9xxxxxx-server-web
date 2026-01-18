@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { configureSlashCommand } from "./extensions/slashCommand";
 
 interface TiptapEditorProps {
   initialContent?: string;
@@ -145,6 +146,7 @@ export default function TiptapEditor({
         transformPastedText: true,
         transformCopiedText: true,
       }),
+      configureSlashCommand(),
     ],
     content: initialContent,
     onCreate: ({ editor }) => {

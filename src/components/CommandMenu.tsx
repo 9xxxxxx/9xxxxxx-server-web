@@ -38,7 +38,7 @@ export function CommandMenu() {
         setOpen(false);
       }
 
-      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || e.key === "/") {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         if (
           (e.target instanceof HTMLElement && e.target.isContentEditable) ||
           e.target instanceof HTMLInputElement ||

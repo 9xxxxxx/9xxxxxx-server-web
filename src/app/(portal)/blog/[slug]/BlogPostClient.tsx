@@ -15,6 +15,11 @@ interface BlogPostClientProps {
   relatedPosts: Post[];
 }
 
+import { TableOfContents } from "@/components/blog/TableOfContents";
+import { FloatingActions } from "@/components/blog/FloatingActions";
+
+// ... previous imports
+
 export default function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 200]);
@@ -36,7 +41,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
     <article className="min-h-screen bg-background text-foreground relative -mt-20">
       
       {/* Immersive Hero Section */}
-      <div className="h-[60vh] w-full relative overflow-hidden flex items-center justify-center">
+      <div className="h-[60vh] md:h-[70vh] w-full relative overflow-hidden flex items-center justify-center">
         <motion.div 
             style={{ y: heroY, opacity: heroOpacity }}
             className="absolute inset-0 z-0"
@@ -56,33 +61,33 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-20" />
         </motion.div>
 
-        <div className="relative z-30 text-center px-4 max-w-4xl mx-auto mt-12">
+        <div className="relative z-30 text-center px-4 max-w-4xl mx-auto mt-20">
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
             >
-                <div className="flex justify-center gap-2 mb-6">
+                <div className="flex justify-center flex-wrap gap-2 mb-6">
                     {post.tags.map((tag) => (
                     <span key={tag} className="px-3 py-1 text-xs font-bold bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-full shadow-lg">
                         {tag}
                     </span>
                     ))}
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black text-white mb-6 drop-shadow-xl leading-tight">
+                <h1 className="text-4xl md:text-6xl font-black text-white mb-6 drop-shadow-xl leading-tight text-balance">
                     {post.title}
                 </h1>
                 
-                <div className="flex items-center justify-center gap-6 text-white/90 font-medium">
-                    <div className="flex items-center gap-2 bg-black/20 backdrop-blur px-3 py-1.5 rounded-full">
+                <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-white/90 font-medium">
+                    <div className="flex items-center gap-2 bg-black/20 backdrop-blur px-3 py-1.5 rounded-full border border-white/10">
                          <UserCircle2 className="w-4 h-4" />
                          <span>{post.author?.name || "Garry"}</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-black/20 backdrop-blur px-3 py-1.5 rounded-full">
+                    <div className="flex items-center gap-2 bg-black/20 backdrop-blur px-3 py-1.5 rounded-full border border-white/10">
                          <Clock className="w-4 h-4" />
                          <span>{post.readingTime || 5} min read</span>
                     </div>
-                     <div className="flex items-center gap-2 bg-black/20 backdrop-blur px-3 py-1.5 rounded-full">
+                     <div className="flex items-center gap-2 bg-black/20 backdrop-blur px-3 py-1.5 rounded-full border border-white/10">
                          <span>{post.createdAt ? formatDate(typeof post.createdAt === 'string' ? post.createdAt : post.createdAt.toISOString()) : ""}</span>
                     </div>
                 </div>
@@ -90,49 +95,71 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
         </div>
       </div>
 
-      {/* Main Content Container */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-40 -mt-24">
-         <Link href="/blog" className="inline-flex items-center text-sm font-medium text-white/80 hover:text-white mb-8 transition-colors bg-black/20 hover:bg-black/40 backdrop-blur px-4 py-2 rounded-full shadow-lg">
-            <ArrowLeft className="w-4 h-4 mr-2" /> 返回博客列表
-        </Link>
-        
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800 rounded-[2.5rem] p-8 md:p-16 shadow-2xl"
-        >
-             {/* Article Body */}
-             <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-indigo prose-img:rounded-2xl prose-img:shadow-lg">
-                 <MarkdownRenderer content={post.content} />
-             </div>
+      {/* Main Content Layout */}
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 relative z-40 -mt-24 pb-20">
+         <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr_240px] gap-8">
+            
+            {/* Left Sidebar: Floating Actions (Desktop) */}
+            <aside className="hidden lg:block relative">
+                 <div className="sticky top-32 flex justify-end pr-4">
+                     <FloatingActions likes={post.likes || 0} postId={post.id || ""} />
+                 </div>
+            </aside>
 
-             {/* Interaction Footer */}
-             <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-4">
-                        <LikeButton initialLikes={post.likes || 0} postId={post.id} />
-                        <span className="text-sm font-medium text-muted-foreground">点赞支持一下</span>
-                  </div>
-                  
-                  {/* Share / Tags footer */}
-                  <div className="flex gap-2">
-                       {post.tags.map(tag => (
-                           <span key={tag} className="flex items-center text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                               <Hash className="w-3 h-3 mr-1" />{tag}
-                           </span>
-                       ))}
-                  </div>
-             </div>
-        </motion.div>
-        
-        {/* Comment Section */}
-        <div className="mt-12 max-w-4xl mx-auto">
-            <CommentSection postId={post.id} />
-        </div>
+            {/* Center: Main Content */}
+            <main className="min-w-0"> {/* min-w-0 prevents flex items from overflowing */}
+                <Link href="/blog" className="inline-flex items-center text-sm font-medium text-white/80 hover:text-white mb-8 transition-colors bg-black/20 hover:bg-black/40 backdrop-blur px-4 py-2 rounded-full shadow-lg">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> 返回博客列表
+                </Link>
+                
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800 rounded-[2.5rem] p-6 md:p-12 shadow-2xl relative overflow-hidden"
+                >
+                    {/* Glass Shine Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
+
+                     {/* Article Body */}
+                     <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24 prose-indigo prose-img:rounded-2xl prose-img:shadow-lg prose-a:text-indigo-600 dark:prose-a:text-indigo-400 hover:prose-a:text-indigo-500 transition-colors">
+                         <MarkdownRenderer content={post.content} />
+                     </div>
+
+                     {/* Mobile Interaction Footer (Visible only on mobile/tablet) */}
+                     <div className="lg:hidden mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
+                          <div className="flex items-center gap-4">
+                                <LikeButton initialLikes={post.likes || 0} postId={post.id} />
+                                <span className="text-sm font-medium text-muted-foreground">点赞支持一下</span>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                               {post.tags.map(tag => (
+                                   <span key={tag} className="flex items-center text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                                       <Hash className="w-3 h-3 mr-1" />{tag}
+                                   </span>
+                               ))}
+                          </div>
+                     </div>
+                </motion.div>
+                
+                {/* Comment Section */}
+                <div className="mt-12">
+                    <CommentSection postId={post.id} />
+                </div>
+            </main>
+
+            {/* Right Sidebar: TOC (Desktop) */}
+            <aside className="hidden lg:block relative">
+                 <div className="sticky top-32 pl-4 border-l border-slate-200/50 dark:border-slate-800/50">
+                     <TableOfContents content={post.content} />
+                 </div>
+            </aside>
+         </div>
 
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
-          <div className="max-w-6xl mx-auto px-6 pt-20 pb-40 border-t border-slate-200 dark:border-slate-800">
+          <div className="max-w-6xl mx-auto pt-20 border-t border-slate-200 dark:border-slate-800 mt-20">
             <h2 className="text-3xl font-bold mb-10 text-center">相关阅读</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {relatedPosts.map((relatedPost) => (

@@ -28,8 +28,9 @@ export default function PostEditorPage({ params }: EditorPageProps) {
   const { accessToken } = useAuthStore();
   const resolvedParams = use(params);
   const postId = resolvedParams.id;
+  const isNew = postId === "new";
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isNew);
   const [isSaving, setIsSaving] = useState(false);
   const [post, setPost] = useState<Post | null>(null);
 
@@ -47,6 +48,12 @@ export default function PostEditorPage({ params }: EditorPageProps) {
     if (!accessToken) {
       router.push("/admin/login");
       return;
+    }
+
+    if (isNew) {
+        document.title = "新建文章";
+        setIsLoading(false);
+        return;
     }
 
     const fetchPost = async () => {
@@ -75,14 +82,23 @@ export default function PostEditorPage({ params }: EditorPageProps) {
     };
 
     fetchPost();
-  }, [postId, accessToken, router]);
+  }, [postId, accessToken, router, isNew]);
 
   // Handle title change to update document title
   useEffect(() => {
     if (title) {
-        document.title = `编辑: ${title}`;
+        document.title = `${isNew ? '新建' : '编辑'}: ${title}`;
+        if (isNew && !slug) {
+            // Keep Chinese characters, replace spaces with -, remove special chars
+            const autoSlug = title.toLowerCase()
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w\-\u4e00-\u9fa5]+/g, '')
+                .replace(/\-\-+/g, '-');
+            setSlug(autoSlug);
+        }
     }
-  }, [title]);
+  }, [title, isNew, slug]);
 
 
   const handleSave = async () => {
@@ -90,10 +106,16 @@ export default function PostEditorPage({ params }: EditorPageProps) {
     setIsSaving(true);
 
     try {
+      const autoSlug = title.toLowerCase()
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w\-\u4e00-\u9fa5]+/g, '')
+                .replace(/\-\-+/g, '-');
+
       const payload = {
         title,
         content, // Content should be Markdown now thanks to TiptapEditor
-        slug,
+        slug: slug || autoSlug,
         published: status === "published",
         category,
         tags: tags.split(",").map(t => t.trim()).filter(Boolean),
@@ -101,8 +123,14 @@ export default function PostEditorPage({ params }: EditorPageProps) {
         coverImage,
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/posts/${postId}`, {
-        method: "PUT",
+      const url = isNew ? 
+          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/posts` : 
+          `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/posts/${postId}`;
+      
+      const method = isNew ? "POST" : "PUT";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
@@ -110,11 +138,21 @@ export default function PostEditorPage({ params }: EditorPageProps) {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to update post");
+      if (!res.ok) throw new Error("Failed to save post");
       
-      // Update local state to reflect saved (although we might want to reload)
-      setPost({ ...post!, ...payload, id: postId } as Post); 
+      const savedPost = await res.json();
+      
       toast.success("已保存");
+      
+      if (isNew) {
+          // 如果是新建，跳转到列表或编辑页
+          // router.push(`/admin/editor/post/${savedPost.id}`); // 可选
+          router.push("/admin/posts");
+          router.refresh();
+      } else {
+          setPost({ ...post!, ...payload, id: postId } as Post); 
+      }
+
     } catch (error) {
       console.error(error);
       toast.error("保存失败");

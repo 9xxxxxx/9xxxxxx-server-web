@@ -34,6 +34,18 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         },
         img: ({ node, ...props }: any) => {
             return <img {...props} src={getAssetUrl(props.src)} className="rounded-2xl shadow-lg my-8 w-full object-cover" />;
+        },
+        h1: ({ node, children, ...props }: any) => {
+            const id = children?.toString().toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
+            return <h1 id={id} {...props} className="scroll-mt-24">{children}</h1>;
+        },
+        h2: ({ node, children, ...props }: any) => {
+            const id = children?.toString().toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
+            return <h2 id={id} {...props} className="scroll-mt-24">{children}</h2>;
+        },
+        h3: ({ node, children, ...props }: any) => {
+            const id = children?.toString().toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
+            return <h3 id={id} {...props} className="scroll-mt-24">{children}</h3>;
         }
       }}
     >

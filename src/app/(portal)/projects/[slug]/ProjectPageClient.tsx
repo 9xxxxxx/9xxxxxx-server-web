@@ -8,6 +8,11 @@ import { LikeButton } from "@/components/ui/like-button";
 import { CommentSection } from "@/components/ui/comment-section";
 import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
 
+import { TableOfContents } from "@/components/blog/TableOfContents";
+import { FloatingActions } from "@/components/blog/FloatingActions";
+
+// ... imports
+
 export default function ProjectPageClient({ project, relatedProjects }: { project: Project; relatedProjects: Project[] }) {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 200]);
@@ -60,32 +65,42 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-40 -mt-32">
-        <Link href="/projects" className="inline-flex items-center text-sm font-medium text-white/80 hover:text-white mb-8 transition-colors bg-black/20 hover:bg-black/40 backdrop-blur px-4 py-2 rounded-full">
-            <ArrowLeft className="w-4 h-4 mr-2" /> 返回项目列表
-        </Link>
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 relative z-40 -mt-32 pb-20">
+        
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr_360px] gap-8">
+            
+            {/* Left Actions */}
+            <div className="hidden lg:flex flex-col gap-4">
+                 <div className="sticky top-32 flex justify-end pr-2">
+                     <FloatingActions likes={project.likes || 0} postId={project.id} />
+                 </div>
+            </div>
+
             {/* Main Content Column */}
-            <div className="lg:col-span-8">
+            <div className="min-w-0">
+                <Link href="/projects" className="inline-flex items-center text-sm font-medium text-white/80 hover:text-white mb-8 transition-colors bg-black/20 hover:bg-black/40 backdrop-blur px-4 py-2 rounded-full">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> 返回项目列表
+                </Link>
+
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800 rounded-[2.5rem] p-8 md:p-12 shadow-2xl"
                 >
-                    <div className="prose dark:prose-invert max-w-none prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-indigo">
+                    <div className="prose dark:prose-invert max-w-none prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24 prose-indigo">
                         <h2 className="flex items-center gap-3 !mt-0 !mb-8 text-3xl">
                             <Layers className="w-8 h-8 text-indigo-500" />
                             项目概述
                         </h2>
-                        <div className="text-xl leading-relaxed text-slate-600 dark:text-slate-300 font-medium">
+                        <div className="text-xl leading-relaxed text-slate-600 dark:text-slate-300 font-medium my-8">
                             {project.description}
                         </div>
 
                         <hr className="my-10 border-slate-200 dark:border-slate-800" />
 
-                        <h3 className="flex items-center gap-3">
+                        <h3 className="flex items-center gap-3 mb-6">
                            <Code2 className="w-6 h-6 text-pink-500" />
                            详细方案
                         </h3>
@@ -94,14 +109,11 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
                         </div>
                     </div>
 
-                    {/* Interaction Area */}
-                    <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    {/* Interaction Area Mobile */}
+                    <div className="lg:hidden mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                          <div className="flex items-center gap-4">
                              <LikeButton initialLikes={project.likes || 0} projectId={project.id} />
                              <span className="text-sm text-muted-foreground">觉得不错？给个赞吧！</span>
-                         </div>
-                         <div className="flex gap-3">
-                             {/* Share or other actions could go here */}
                          </div>
                     </div>
                 </motion.div>
@@ -111,61 +123,66 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
             </div>
 
             {/* Sidebar Column */}
-            <div className="lg:col-span-4 space-y-6">
-                <motion.div 
+            <div className="space-y-6">
+                {/* TOC Stick */}
+                 <motion.div 
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.4 }}
-                    className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-800 rounded-3xl p-8 shadow-xl sticky top-24"
+                    className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-800 rounded-3xl p-6 shadow-xl sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto"
                 >
-                    <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                        项目信息
-                    </h3>
+                    <TableOfContents content={project.fullDescription || ""} />
                     
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-                             <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
-                                 <Calendar className="w-4 h-4" /> 发布日期
-                             </div>
-                             <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                 {new Date(project.createdAt).toLocaleDateString()}
-                             </span>
-                        </div>
-
-                        <div className="space-y-3">
-                            {project.githubLink && (
-                                <a href={project.githubLink} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-slate-900 text-white font-medium hover:scale-[1.02] hover:shadow-lg transition-all">
-                                    <Github className="w-5 h-5" /> GitHub 仓库
-                                </a>
-                            )}
-                            {project.demoLink && (
-                                <a href={project.demoLink} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/20 transition-all">
-                                    <ExternalLink className="w-5 h-5" /> 在线演示
-                                </a>
-                            )}
-                        </div>
-
-                        <div>
-                            <h4 className="text-sm font-medium text-slate-500 mb-3 ml-1">技术全家桶</h4>
-                            <div className="flex flex-wrap gap-2">
-                                {project.techStack.map((tech) => (
-                                    <span key={tech} className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                        {tech}
-                                    </span>
-                                ))}
+                    <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800" >
+                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                            项目信息
+                        </h3>
+                        
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                                <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+                                    <Calendar className="w-4 h-4" /> 发布日期
+                                </div>
+                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    {new Date(project.createdAt).toLocaleDateString()}
+                                </span>
                             </div>
-                        </div>
 
-                         <div>
-                            <h4 className="text-sm font-medium text-slate-500 mb-3 ml-1">功能亮点</h4>
-                            <ul className="space-y-2">
-                                {project.features.map((feature, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                        <span className="text-green-500 mt-0.5">●</span>
-                                        {feature}
-                                    </li>
-                                ))}
-                            </ul>
+                            <div className="space-y-3">
+                                {project.githubLink && (
+                                    <a href={project.githubLink} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-slate-900 text-white font-medium hover:scale-[1.02] hover:shadow-lg transition-all">
+                                        <Github className="w-5 h-5" /> GitHub 仓库
+                                    </a>
+                                )}
+                                {project.demoLink && (
+                                    <a href={project.demoLink} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/20 transition-all">
+                                        <ExternalLink className="w-5 h-5" /> 在线演示
+                                    </a>
+                                )}
+                            </div>
+
+                            <div>
+                                <h4 className="text-sm font-medium text-slate-500 mb-3 ml-1">技术全家桶</h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {project.techStack.map((tech) => (
+                                        <span key={tech} className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                            {tech}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 className="text-sm font-medium text-slate-500 mb-3 ml-1">功能亮点</h4>
+                                <ul className="space-y-2">
+                                    {project.features.map((feature, idx) => (
+                                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                            <span className="text-green-500 mt-0.5">●</span>
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </motion.div>

@@ -87,7 +87,7 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
   // Sync title
   useEffect(() => {
       if (title && isNew && !slug) {
-         setSlug(title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
+         setSlug(title.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-\u4e00-\u9fa5]+/g, '').replace(/\-\-+/g, '-'));
       }
       if (title) document.title = `${isNew ? '新建' : '编辑'}: ${title}`;
   }, [title, isNew, slug]);
@@ -98,7 +98,7 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
       try {
         const payload = {
             title,
-            slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            slug: slug || title.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-\u4e00-\u9fa5]+/g, '').replace(/\-\-+/g, '-'),
             description,
             fullDescription, // Markdown content
             category,
