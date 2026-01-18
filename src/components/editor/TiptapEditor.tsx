@@ -34,9 +34,10 @@ import {
   Check,
   Type
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { configureSlashCommand } from "./extensions/slashCommand";
+import EditorHelp from "./EditorHelp";
 
 interface TiptapEditorProps {
   initialContent?: string;
@@ -123,8 +124,7 @@ export default function TiptapEditor({
   const [imageUrl, setImageUrl] = useState("");
   const [showImageInput, setShowImageInput] = useState(false);
 
-  const editor = useEditor({
-    extensions: [
+  const extensions = useMemo(() => [
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],
@@ -170,7 +170,10 @@ export default function TiptapEditor({
         transformCopiedText: true,
       }),
       configureSlashCommand(),
-    ],
+  ], []);
+
+  const editor = useEditor({
+    extensions,
     content: initialContent,
     onCreate: ({ editor }) => {
       // @ts-ignore
@@ -289,6 +292,9 @@ export default function TiptapEditor({
 
   return (
     <div className="relative">
+      {/* 帮助弹窗 */}
+      <EditorHelp />
+
       {/* 顶部固定工具栏 */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 dark:bg-slate-900/95 py-2 -mx-4 px-4 mb-8 flex flex-wrap items-center gap-1 shadow-sm transition-all">
         <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="撤销">
@@ -307,6 +313,9 @@ export default function TiptapEditor({
         <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive("heading", { level: 2 })} title="H2">
           <Heading2 className="w-4 h-4" />
         </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} isActive={editor.isActive("heading", { level: 3 })} title="H3">
+          <Heading3 className="w-4 h-4" />
+        </ToolbarButton>
 
         <Divider />
 
@@ -315,6 +324,9 @@ export default function TiptapEditor({
         </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive("italic")} title="斜体">
           <Italic className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive("strike")} title="删除线">
+          <Strikethrough className="w-4 h-4" />
         </ToolbarButton>
         
         <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive("code")} title="Code">
@@ -386,17 +398,6 @@ export default function TiptapEditor({
         </div>
       </div>
 
-      {/* Bubble Menu & Floating Menu disabled due to build issues
-      {editor && (
-            <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
-               ...
-            </BubbleMenu>
-      )}
-
-      {editor && (
-           <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900 ml-[-40px]">
-               ...
-           </FloatingMenu>
       )}
       */}
 
