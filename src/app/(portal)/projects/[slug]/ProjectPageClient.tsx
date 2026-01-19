@@ -37,6 +37,7 @@ import { jsonToHTML } from "@/components/editor/render/toHTML";
 import { TableOfContents } from "@/components/blog/TableOfContents";
 import { FloatingActions } from "@/components/blog/FloatingActions";
 
+import { toast } from "sonner";
 // ... imports
 
 export default function ProjectPageClient({ project, relatedProjects }: { project: Project; relatedProjects: Project[] }) {

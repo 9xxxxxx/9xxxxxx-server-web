@@ -43,6 +43,7 @@ interface BlogPostClientProps {
 import { TableOfContents } from "@/components/blog/TableOfContents";
 import { FloatingActions } from "@/components/blog/FloatingActions";
 
+import { toast } from "sonner";
 // ... previous imports
 
 export default function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
@@ -122,8 +123,8 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
 
       {/* Main Content Layout */}
       {/* Main Content Layout */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-40 -mt-24 pb-20">
-         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 relative z-40 -mt-24 pb-20">
+         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-16">
             
             {/* Main Content */}
             <main className="min-w-0">
@@ -135,7 +136,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800 rounded-[2.5rem] p-6 md:p-12 shadow-2xl relative overflow-hidden"
+                    className="backdrop-blur-xl border border-white/10 dark:border-slate-800 rounded-[2.5rem] p-8 md:p-16 shadow-2xl relative overflow-hidden bg-white/50 dark:bg-slate-900/50"
                 >
                     {/* Glass Shine Effect */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
@@ -183,7 +184,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
 
             {/* Right Sidebar: TOC & Interaction */}
             <aside className="hidden lg:block space-y-8">
-                 <div className="sticky top-32 space-y-6">
+                 <div className="sticky top-10 space-y-6">
                      {/* Interaction Card */}
                      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between">
                          <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
@@ -196,6 +197,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                                  const handleCopy = () => {
                                      if (navigator.clipboard && window.isSecureContext) {
                                          navigator.clipboard.writeText(url);
+                                         toast.success("文章链接已复制！");
                                      } else {
                                          const textArea = document.createElement("textarea");
                                          textArea.value = url;
@@ -204,10 +206,14 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                                          document.body.appendChild(textArea);
                                          textArea.focus();
                                          textArea.select();
-                                         try { document.execCommand('copy'); } catch (e) {}
+                                         try { 
+                                            document.execCommand('copy'); 
+                                            toast.success("文章链接已复制！");
+                                         } catch (e) {
+                                            toast.error("复制失败，请手动");
+                                         }
                                          document.body.removeChild(textArea);
                                      }
-                                     alert("文章链接已复制！"); 
                                  };
                                  handleCopy();
                              }}
