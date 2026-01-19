@@ -278,10 +278,12 @@
 }
 
 /* ========================================
-   代码高亮主题（基于 highlight.js）
+   代码高亮主题（基于 highlight.js / lowlight）
    ======================================== */
 
 /* 注释 */
+.structured-editor pre code .hljs-comment,
+.structured-editor pre code .hljs-quote,
 .structured-editor .hljs-comment,
 .structured-editor .hljs-quote {
   color: #6b7280;
@@ -289,6 +291,10 @@
 }
 
 /* 关键字 */
+.structured-editor pre code .hljs-keyword,
+.structured-editor pre code .hljs-selector-tag,
+.structured-editor pre code .hljs-built_in,
+.structured-editor pre code .hljs-name,
 .structured-editor .hljs-keyword,
 .structured-editor .hljs-selector-tag,
 .structured-editor .hljs-built_in,
@@ -297,6 +303,10 @@
 }
 
 /* 字符串 */
+.structured-editor pre code .hljs-string,
+.structured-editor pre code .hljs-attr,
+.structured-editor pre code .hljs-symbol,
+.structured-editor pre code .hljs-bullet,
 .structured-editor .hljs-string,
 .structured-editor .hljs-attr,
 .structured-editor .hljs-symbol,
@@ -305,36 +315,66 @@
 }
 
 /* 数字 */
+.structured-editor pre code .hljs-number,
+.structured-editor pre code .hljs-literal,
 .structured-editor .hljs-number,
 .structured-editor .hljs-literal {
   color: #fb923c;
 }
 
 /* 函数 */
+.structured-editor pre code .hljs-title,
+.structured-editor pre code .hljs-section,
 .structured-editor .hljs-title,
 .structured-editor .hljs-section {
   color: #60a5fa;
 }
 
 /* 类型 */
+.structured-editor pre code .hljs-type,
+.structured-editor pre code .hljs-class,
 .structured-editor .hljs-type,
 .structured-editor .hljs-class {
   color: #fbbf24;
 }
 
 /* 变量 */
+.structured-editor pre code .hljs-variable,
+.structured-editor pre code .hljs-template-variable,
 .structured-editor .hljs-variable,
 .structured-editor .hljs-template-variable {
   color: #f472b6;
 }
 
 /* 属性 */
+.structured-editor pre code .hljs-attribute,
 .structured-editor .hljs-attribute {
   color: #a5b4fc;
 }
 
 /* 操作符 */
+.structured-editor pre code .hljs-operator,
 .structured-editor .hljs-operator {
+  color: #94a3b8;
+}
+
+/* 函数参数、正则 */
+.structured-editor pre code .hljs-params,
+.structured-editor pre code .hljs-regexp,
+.structured-editor .hljs-params,
+.structured-editor .hljs-regexp {
+  color: #fcd34d;
+}
+
+/* 标签 */
+.structured-editor pre code .hljs-tag,
+.structured-editor .hljs-tag {
+  color: #f472b6;
+}
+
+/* meta */
+.structured-editor pre code .hljs-meta,
+.structured-editor .hljs-meta {
   color: #94a3b8;
 }
 
@@ -416,4 +456,36 @@
 .structured-editor-language-select:focus {
   outline: none;
   border-color: var(--editor-accent);
+}
+
+/* ========================================
+   图片样式
+   ======================================== */
+
+.structured-editor .ProseMirror .editor-image,
+.structured-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.25em 0;
+  display: block;
+  cursor: default;
+}
+
+.structured-editor .ProseMirror img.ProseMirror-selectednode {
+  outline: 3px solid var(--editor-accent);
+  outline-offset: 2px;
+}
+
+/* 图片居中 */
+.structured-editor .ProseMirror figure {
+  margin: 1.25em 0;
+  text-align: center;
+}
+
+.structured-editor .ProseMirror figcaption {
+  margin-top: 0.5em;
+  font-size: 0.875em;
+  color: var(--editor-text-muted);
+  font-style: italic;
 }

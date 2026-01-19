@@ -27,6 +27,8 @@ export interface StructuredEditorProps {
   autoFocus?: boolean
   /** 占位符文本 */
   placeholder?: string
+  /** 图片上传处理函数 */
+  onImageUpload?: (file: File) => Promise<string>
 }
 
 /**
@@ -73,6 +75,7 @@ export default function StructuredEditor({
   onChange,
   className = '',
   autoFocus = true,
+  onImageUpload,
 }: StructuredEditorProps) {
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
@@ -136,7 +139,7 @@ export default function StructuredEditor({
 
   return (
     <div className={`structured-editor ${className}`}>
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} onImageUpload={onImageUpload} />
       <EditorContent editor={editor} />
     </div>
   )

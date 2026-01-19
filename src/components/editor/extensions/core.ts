@@ -10,6 +10,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
 import Typography from '@tiptap/extension-typography'
+import Image from '@tiptap/extension-image'
 
 /**
  * 获取核心写作扩展
@@ -66,6 +67,15 @@ export function getCoreExtensions() {
       },
       emptyEditorClass: 'is-editor-empty',
       emptyNodeClass: 'is-empty',
+    }),
+
+    // 图片扩展
+    Image.configure({
+      inline: false,
+      allowBase64: true,
+      HTMLAttributes: {
+        class: 'editor-image',
+      },
     }),
   ]
 }
