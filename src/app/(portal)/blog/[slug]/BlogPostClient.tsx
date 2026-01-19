@@ -2,6 +2,29 @@
 import React, { useEffect, useRef } from "react";
 import { Check, Copy } from "lucide-react";
 import { createRoot } from "react-dom/client";
+import hljs from 'highlight.js';
+import javascript from 'highlight.js/lib/languages/javascript';
+import typescript from 'highlight.js/lib/languages/typescript';
+import python from 'highlight.js/lib/languages/python';
+import bash from 'highlight.js/lib/languages/bash';
+import json from 'highlight.js/lib/languages/json';
+import sql from 'highlight.js/lib/languages/sql';
+import yaml from 'highlight.js/lib/languages/yaml';
+import xml from 'highlight.js/lib/languages/xml';
+import css from 'highlight.js/lib/languages/css';
+import markdown from 'highlight.js/lib/languages/markdown';
+
+// Register languages manually to ensure tree-shaking efficacy if needed, or just specific ones
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('python', python);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('sql', sql);
+hljs.registerLanguage('yaml', yaml);
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('markdown', markdown);
 import { Post } from "@/lib/blog"; // You might need to check where Post type is defined
 import Link from "next/link";
 import { ArrowLeft, Clock, User, UserCircle2, Hash } from "lucide-react";
@@ -133,7 +156,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                                return (
                                  <div className="structured-editor bg-transparent p-0">
                                    <div className="ProseMirror" dangerouslySetInnerHTML={{ __html: jsonToHTML(json) }} />
-                                   <CopyButtonInjector />
+                                   <EditorEnhancer />
                                  </div>
                                );
                              }
@@ -221,10 +244,19 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
   );
 }
 
-const CopyButtonInjector = () => {
+const EditorEnhancer = () => {
     useEffect(() => {
-        const blocks = document.querySelectorAll('.structured-editor pre');
-        blocks.forEach((element) => {
+        // 1. Highlight Code Blocks
+        const codeBlocks = document.querySelectorAll('.structured-editor pre code');
+        codeBlocks.forEach((block) => {
+            if (block.getAttribute('data-highlighted') === 'yes') return;
+            hljs.highlightElement(block as HTMLElement);
+            block.setAttribute('data-highlighted', 'yes');
+        });
+
+        // 2. Inject Copy Buttons
+        const preBlocks = document.querySelectorAll('.structured-editor pre');
+        preBlocks.forEach((element) => {
             const block = element as HTMLElement;
             if (block.querySelector('.copy-btn-root')) return;
 
@@ -248,10 +280,31 @@ const CopyButtonInjector = () => {
 const CopyButton = ({ text }: { text: string }) => {
     const [copied, setCopied] = React.useState(false);
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = async () => {
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for HTTP
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                document.body.removeChild(textArea);
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Copy failed', err);
+        }
     };
 
     return (
