@@ -168,36 +168,7 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
             {/* Sidebar Column */}
             <div className="space-y-6">
                 <div className="sticky top-32 space-y-6">
-                    {/* Actions Panel */}
-                     <div className="hidden lg:flex items-center justify-between bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-800 rounded-3xl p-4 shadow-xl">
-                        <span className="text-sm font-medium text-slate-500 ml-2">项目互动</span>
-                        <div className="flex gap-2">
-                             <LikeButton initialLikes={project.likes || 0} projectId={project.id} className="bg-white dark:bg-slate-800 shadow-sm" />
-                             <button 
-                                onClick={() => {
-                                    const url = window.location.href;
-                                    if (navigator.clipboard && window.isSecureContext) {
-                                        navigator.clipboard.writeText(url);
-                                    } else {
-                                        const textArea = document.createElement("textarea");
-                                        textArea.value = url;
-                                        textArea.style.position = "fixed";
-                                        textArea.style.left = "-9999px";
-                                        document.body.appendChild(textArea);
-                                        textArea.focus();
-                                        textArea.select();
-                                        try { document.execCommand('copy'); } catch (e) {}
-                                        document.body.removeChild(textArea);
-                                    }
-                                    // Feedback
-                                }}
-                                className="p-2 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm"
-                                title="分享项目"
-                             >
-                                 <ExternalLink className="w-5 h-5" />
-                             </button>
-                        </div>
-                     </div>
+                     {/* Actions Panel Removed - Functionality provided by FloatingActions */}
 
                     {/* TOC Stick */}
                     <motion.div 

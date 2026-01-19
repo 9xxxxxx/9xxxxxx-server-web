@@ -55,6 +55,9 @@ export function Navbar({ config }: NavbarProps) {
          <a href="https://github.com/9xxxxxx" target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all group" aria-label="GitHub">
             <Github className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
          </a>
+         <Link href="/admin" className="p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all group" aria-label="Admin Dashboard">
+            <Settings className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
+         </Link>
          <button 
             onClick={() => document.dispatchEvent(new CustomEvent("open-command-menu"))}
             className="p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all group"
@@ -158,6 +161,9 @@ export function Navbar({ config }: NavbarProps) {
             <div className="w-8 h-px bg-slate-200 dark:bg-slate-700" />
             
             <div className="flex flex-col gap-2">
+                <Link href="/admin" className="p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all" aria-label="Admin Dashboard">
+                    <Settings className="w-5 h-5" />
+                </Link>
                 <button 
                   onClick={() => document.dispatchEvent(new CustomEvent("open-command-menu"))} 
                   className="p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all"
