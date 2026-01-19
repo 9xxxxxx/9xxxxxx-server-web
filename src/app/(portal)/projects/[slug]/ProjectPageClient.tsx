@@ -73,7 +73,7 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
             {/* Left Actions */}
             <div className="hidden lg:flex flex-col gap-4">
                  <div className="sticky top-32 flex justify-end pr-2">
-                     <FloatingActions likes={project.likes || 0} postId={project.id} />
+                     <FloatingActions likes={project.likes || 0} projectId={project.id} />
                  </div>
             </div>
 

@@ -26,7 +26,9 @@ export function LikeButton({ initialLikes, projectId, postId, className }: LikeB
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/likes", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const url = `${apiUrl}/api/likes`;
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId, postId }),

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import create_db_and_tables
 from fastapi.staticfiles import StaticFiles
-from api import posts, projects, site, stats, auth, upload, search, analytics, categories, comments, users
+from api import posts, projects, site, stats, auth, upload, search, analytics, categories, comments, users, likes
 import os
 
 @asynccontextmanager
@@ -49,6 +49,7 @@ app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"]
 app.include_router(categories.router, prefix="/api/categories", tags=["categories"])
 app.include_router(comments.router, prefix="/api/comments", tags=["comments"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(likes.router, prefix="/api/likes", tags=["likes"])
 
 @app.get("/")
 def read_root():

@@ -33,6 +33,10 @@ def get_comments_for_post(slug: str, session: Session = Depends(get_session)):
     """获取文章的留言列表 (公开)"""
     post = session.exec(select(Post).where(Post.slug == slug)).first()
     if not post:
+        # Try finding by ID
+        post = session.get(Post, slug)
+    
+    if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
     comments = session.exec(
@@ -51,6 +55,9 @@ def add_comment_to_post(slug: str, comment: CommentCreate, session: Session = De
     """为文章添加留言 (公开, 无需登录)"""
     post = session.exec(select(Post).where(Post.slug == slug)).first()
     if not post:
+        post = session.get(Post, slug)
+
+    if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
     new_comment = CommentModel(
@@ -67,6 +74,9 @@ def add_comment_to_post(slug: str, comment: CommentCreate, session: Session = De
 def get_comments_for_project(slug: str, session: Session = Depends(get_session)):
     """获取项目的留言列表 (公开)"""
     project = session.exec(select(Project).where(Project.slug == slug)).first()
+    if not project:
+        project = session.get(Project, slug)
+
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
@@ -85,6 +95,9 @@ def get_comments_for_project(slug: str, session: Session = Depends(get_session))
 def add_comment_to_project(slug: str, comment: CommentCreate, session: Session = Depends(get_session)):
     """为项目添加留言 (公开, 无需登录)"""
     project = session.exec(select(Project).where(Project.slug == slug)).first()
+    if not project:
+        project = session.get(Project, slug)
+
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
