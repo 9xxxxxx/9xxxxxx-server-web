@@ -1,5 +1,7 @@
 "use client";
-import React from "react";
+import React, { useRef, useEffect } from "react";
+import { Check, Copy } from "lucide-react";
+import { createRoot } from "react-dom/client";
 import { Project } from "@/lib/projects";
 import { Home as HomeIcon, ArrowLeft, Github, ExternalLink, Calendar, Code2, Layers } from "lucide-react";
 import Link from "next/link";
@@ -106,16 +108,23 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
                            详细方案
                         </h3>
                         <div className="text-slate-600 dark:text-slate-400">
+                        <div className="text-slate-600 dark:text-slate-400">
                              {(() => {
                                try {
                                  const content = project.fullDescription || "";
                                  const json = JSON.parse(content);
                                  if (json && json.type === 'doc') {
-                                   return <div className="tiptap" dangerouslySetInnerHTML={{ __html: jsonToHTML(json) }} />;
+                                     return (
+                                       <div className="structured-editor bg-transparent p-0">
+                                         <div className="ProseMirror" dangerouslySetInnerHTML={{ __html: jsonToHTML(json) }} />
+                                         <CopyButtonInjector />
+                                       </div>
+                                     );
                                  }
                                } catch (e) {}
                                return <MarkdownRenderer content={project.fullDescription || ""} />;
                              })()}
+                        </div>
                         </div>
                     </div>
 
@@ -240,3 +249,47 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
     </main>
   );
 }
+
+const CopyButtonInjector = () => {
+    useEffect(() => {
+        const blocks = document.querySelectorAll('.structured-editor pre');
+        blocks.forEach((element) => {
+            const block = element as HTMLElement;
+            if (block.querySelector('.copy-btn-root')) return;
+
+            // Ensure relative positioning
+            if (window.getComputedStyle(block).position === 'static') {
+              block.style.position = 'relative'; 
+            }
+
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'copy-btn-root absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10';
+            block.classList.add('group'); // Add group for hover effect
+            block.appendChild(btnContainer);
+
+            const root = createRoot(btnContainer);
+            root.render(<CopyButton text={block.textContent || ''} />);
+        });
+    });
+    return null;
+};
+
+const CopyButton = ({ text }: { text: string }) => {
+    const [copied, setCopied] = React.useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <button 
+            onClick={handleCopy}
+            className="p-1.5 rounded-md text-white/70 hover:text-white bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all border border-white/10"
+            title="Copy code"
+        >
+            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+        </button>
+    );
+};
