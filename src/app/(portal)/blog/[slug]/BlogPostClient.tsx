@@ -41,7 +41,7 @@ interface BlogPostClientProps {
 }
 
 import { TableOfContents } from "@/components/blog/TableOfContents";
-import { FloatingActions } from "@/components/blog/FloatingActions";
+
 
 import { toast } from "sonner";
 // ... previous imports
@@ -64,7 +64,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
   const coverImage = post.coverImage ? getAssetUrl(post.coverImage) : "/seed-assets/blog_future_city.png"; // Default fallback if none
 
   return (
-    <article className="min-h-screen bg-background text-foreground relative -mt-20">
+    <article className="min-h-screen bg-transparent text-foreground relative -mt-20">
       
       {/* Immersive Hero Section */}
       <div className="h-[60vh] md:h-[70vh] w-full relative overflow-hidden flex items-center justify-center">
@@ -124,14 +124,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
       {/* Main Content Layout */}
       {/* Main Content Layout */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 relative z-40 -mt-24 pb-20">
-         <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr_320px] gap-8 lg:gap-16">
-
-            {/* Left Actions */}
-            <div className="hidden lg:flex flex-col gap-4">
-                 <div className="sticky top-32 flex justify-end pr-2">
-                     <FloatingActions likes={post.likes || 0} postId={post.id} />
-                 </div>
-            </div>
+         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-16">
             
             {/* Main Content */}
             <main className="min-w-0">
@@ -192,7 +185,44 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
             {/* Right Sidebar: TOC & Interaction */}
             <aside className="hidden lg:block space-y-8">
                  <div className="sticky top-10 space-y-6">
-                     {/* Interaction Card Removed - Moved to Left Sidebar */}
+                     {/* Interaction Card */}
+                     <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between">
+                         <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                             <span>喜欢这篇文章？</span>
+                             <LikeButton initialLikes={post.likes || 0} postId={post.id} className="bg-white dark:bg-slate-800 py-1.5 px-3 shadow-sm text-sm" />
+                         </div>
+                         <button 
+                             onClick={() => {
+                                 const url = window.location.href;
+                                 const handleCopy = () => {
+                                     if (navigator.clipboard && window.isSecureContext) {
+                                         navigator.clipboard.writeText(url);
+                                         toast.success("文章链接已复制！");
+                                     } else {
+                                         const textArea = document.createElement("textarea");
+                                         textArea.value = url;
+                                         textArea.style.position = "fixed";
+                                         textArea.style.left = "-9999px";
+                                         document.body.appendChild(textArea);
+                                         textArea.focus();
+                                         textArea.select();
+                                         try { 
+                                            document.execCommand('copy'); 
+                                            toast.success("文章链接已复制！");
+                                         } catch (e) {
+                                            toast.error("复制失败，请手动");
+                                         }
+                                         document.body.removeChild(textArea);
+                                     }
+                                 };
+                                 handleCopy();
+                             }}
+                             className="p-2 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors"
+                             title="分享文章"
+                         >
+                             <ExternalLink className="w-4 h-4" />
+                         </button>
+                     </div>
 
                      {/* TOC */}
                      <div className="pl-4 border-l border-slate-200/50 dark:border-slate-800/50">

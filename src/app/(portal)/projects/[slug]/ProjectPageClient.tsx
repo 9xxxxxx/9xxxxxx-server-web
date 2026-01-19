@@ -35,7 +35,7 @@ import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
 import { jsonToHTML } from "@/components/editor/render/toHTML";
 
 import { TableOfContents } from "@/components/blog/TableOfContents";
-import { FloatingActions } from "@/components/blog/FloatingActions";
+
 
 import { toast } from "sonner";
 // ... imports
@@ -95,14 +95,7 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 relative z-40 -mt-32 pb-20">
         
 
-        <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr_360px] gap-8">
-            
-            {/* Left Actions */}
-            <div className="hidden lg:flex flex-col gap-4">
-                 <div className="sticky top-32 flex justify-end pr-2">
-                     <FloatingActions likes={project.likes || 0} projectId={project.id} />
-                 </div>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
 
             {/* Main Content Column */}
             <div className="min-w-0">
@@ -168,7 +161,44 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
             {/* Sidebar Column */}
             <div className="space-y-6">
                 <div className="sticky top-32 space-y-6">
-                     {/* Actions Panel Removed - Functionality provided by FloatingActions */}
+                     {/* Actions Panel - Restored & Integrated */}
+                     <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between">
+                         <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                             <span>项目互动</span>
+                             <LikeButton initialLikes={project.likes || 0} projectId={project.id} className="bg-white dark:bg-slate-800 shadow-sm" />
+                         </div>
+                         <button 
+                             onClick={() => {
+                                 const url = window.location.href;
+                                 const handleCopy = () => {
+                                     if (navigator.clipboard && window.isSecureContext) {
+                                         navigator.clipboard.writeText(url);
+                                         toast.success("项目链接已复制！");
+                                     } else {
+                                         const textArea = document.createElement("textarea");
+                                         textArea.value = url;
+                                         textArea.style.position = "fixed";
+                                         textArea.style.left = "-9999px";
+                                         document.body.appendChild(textArea);
+                                         textArea.focus();
+                                         textArea.select();
+                                         try { 
+                                            document.execCommand('copy'); 
+                                            toast.success("项目链接已复制！");
+                                         } catch (e) {
+                                            toast.error("复制失败，请手动");
+                                         }
+                                         document.body.removeChild(textArea);
+                                     }
+                                 };
+                                 handleCopy();
+                             }}
+                             className="p-2 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors"
+                             title="分享项目"
+                         >
+                             <ExternalLink className="w-5 h-5" />
+                         </button>
+                     </div>
 
                     {/* TOC Stick */}
                     <motion.div 
