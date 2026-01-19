@@ -47,6 +47,7 @@ export default function PostEditorPage({ params }: EditorPageProps) {
 
   // 图片编辑器
   const [showImageEditor, setShowImageEditor] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!accessToken) {
@@ -169,6 +170,13 @@ export default function PostEditorPage({ params }: EditorPageProps) {
     }
   };
   
+  // 打开图片编辑器（关闭 Sheet）
+  const openCoverImageEditor = () => {
+    setIsSheetOpen(false);
+    // 延迟打开图片编辑器，等 Sheet 关闭动画完成
+    setTimeout(() => setShowImageEditor(true), 200);
+  };
+
   // 封面图完成回调
   const handleCoverImageComplete = async (imageUrl: string) => {
     const toastId = toast.loading("上传封面中...");
@@ -199,6 +207,8 @@ export default function PostEditorPage({ params }: EditorPageProps) {
         toast.success("封面图已设置", { id: toastId });
       }
       setShowImageEditor(false);
+      // 重新打开 Sheet
+      setTimeout(() => setIsSheetOpen(true), 100);
     } catch(e) {
       console.error(e);
       toast.error("封面图上传失败", { id: toastId });
@@ -238,7 +248,7 @@ export default function PostEditorPage({ params }: EditorPageProps) {
                 保存
              </button>
 
-             <Sheet>
+             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                  <SheetTrigger asChild>
                     <button className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
                         <Settings className="w-5 h-5" />
@@ -292,14 +302,14 @@ export default function PostEditorPage({ params }: EditorPageProps) {
                                          <button onClick={() => setCoverImage("")} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white">
                                              <XIcon className="w-4 h-4"/>
                                          </button>
-                                          <button onClick={() => setShowImageEditor(true)} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white">
+                                          <button onClick={openCoverImageEditor} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white">
                                              <ImageIcon className="w-4 h-4"/>
                                          </button>
                                      </div>
                                  </div>
                              ) : (
                                  <button 
-                                     onClick={() => setShowImageEditor(true)}
+                                     onClick={openCoverImageEditor}
                                      className="block w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all group"
                                  >
                                      <div className="p-3 bg-slate-100 rounded-full mb-2 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
@@ -389,7 +399,10 @@ export default function PostEditorPage({ params }: EditorPageProps) {
       {showImageEditor && (
         <ImageEditor
           onComplete={handleCoverImageComplete}
-          onCancel={() => setShowImageEditor(false)}
+          onCancel={() => {
+            setShowImageEditor(false);
+            setTimeout(() => setIsSheetOpen(true), 100);
+          }}
           aspect={16/9}
         />
       )}

@@ -198,7 +198,7 @@ export default function ImageEditor({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden flex flex-col max-h-[90vh]">
         {/* 头部 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -213,22 +213,22 @@ export default function ImageEditor({
         </div>
 
         {/* 内容区 */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {mode === 'select' ? (
             // 选择模式
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-2xl mx-auto py-12">
               {/* 上传区域 */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all group"
+                className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-12 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all group"
               >
-                <div className="w-12 h-12 mx-auto mb-4 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 transition-colors">
-                  <Upload className="w-6 h-6 text-slate-400 group-hover:text-indigo-600" />
+                <div className="w-16 h-16 mx-auto mb-6 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 transition-colors">
+                  <Upload className="w-8 h-8 text-slate-400 group-hover:text-indigo-600" />
                 </div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <p className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
                   点击上传图片
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-sm text-slate-400">
                   支持 JPG、PNG、GIF、WebP
                 </p>
                 <input
@@ -243,44 +243,44 @@ export default function ImageEditor({
               {/* 分隔线 */}
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-                <span className="text-xs text-slate-400">或</span>
+                <span className="text-sm text-slate-400">或</span>
                 <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
               </div>
 
               {/* URL 输入 */}
-              <div className="flex gap-2">
-                <div className="flex-1 flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20">
-                  <LinkIcon className="w-4 h-4 text-slate-400" />
+              <div className="flex gap-3">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                  <LinkIcon className="w-5 h-5 text-slate-400" />
                   <input
                     type="url"
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
                     placeholder="输入图片 URL..."
-                    className="flex-1 bg-transparent outline-none text-sm text-slate-900 dark:text-white placeholder:text-slate-400"
+                    className="flex-1 bg-transparent outline-none text-base text-slate-900 dark:text-white placeholder:text-slate-400"
                   />
                 </div>
                 <button
                   onClick={handleUrlSubmit}
                   disabled={!urlInput.trim()}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   确定
                 </button>
               </div>
 
               {isUploading && (
-                <div className="text-center text-sm text-slate-500">
-                  <RefreshCw className="w-4 h-4 inline animate-spin mr-2" />
+                <div className="text-center text-slate-500">
+                  <RefreshCw className="w-5 h-5 inline animate-spin mr-2" />
                   上传中...
                 </div>
               )}
             </div>
           ) : (
             // 编辑模式
-            <div className="space-y-4">
+            <div className="space-y-6 h-full flex flex-col">
               {/* 裁剪区域 */}
-              <div className="relative h-80 bg-slate-900 rounded-xl overflow-hidden">
+              <div className="relative flex-1 min-h-[50vh] bg-slate-900 rounded-xl overflow-hidden">
                 <Cropper
                   image={imageUrl}
                   crop={crop}
