@@ -1,47 +1,50 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import PostEditor from "@/components/admin/PostEditor";
-import { fetchAPI } from "@/lib/api-client";
-import { Post } from "@/lib/blog";
-import { Loader2 } from "lucide-react";
+import { Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Construction, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
-function PostEditorWrapper() {
+function PostEditorContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
 
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(!!id);
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center gap-4 px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <Link href="/admin/posts" className="text-slate-500 hover:text-slate-900 p-2 -ml-2 rounded-lg hover:bg-slate-100">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <span className="text-sm text-slate-500">{id ? `编辑文章 #${id}` : '新建文章'}</span>
+      </header>
 
-  useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-    
-    console.log("Fetching post ID:", id);
-    fetchAPI<Post>(`/api/posts/id/${id}`)
-      .then(setPost)
-      .catch((e) => {
-          console.error("Load post error:", e);
-          alert("Failed to load post");
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  if (loading) return <div className="flex h-96 items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600"/></div>;
-  
-  // If id is provided but post not found
-  if (id && !post) return <div>Post not found</div>;
-
-  return <PostEditor initialPost={post || undefined} isEditing={!!id} />;
+      {/* 编辑器占位 */}
+      <main className="max-w-4xl mx-auto py-20 px-6">
+        <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 py-20">
+          <div className="p-4 bg-amber-100 rounded-full mb-4">
+            <Construction className="w-8 h-8 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-700 mb-2">编辑器正在重新设计中</h3>
+          <p className="text-sm text-slate-500 text-center max-w-md">
+            新的编辑器即将上线，敬请期待！
+          </p>
+          <p className="text-xs text-slate-400 mt-4">
+            请使用新版编辑器：
+            <Link href={`/admin/editor/post/${id || 'new'}`} className="text-indigo-600 hover:underline ml-1">
+              前往新版编辑器
+            </Link>
+          </p>
+        </div>
+      </main>
+    </div>
+  );
 }
 
 export default function AdminPostEditorPage() {
   return (
-    <Suspense fallback={<div className="flex h-96 items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600"/></div>}>
-      <PostEditorWrapper />
+    <Suspense fallback={<div className="flex h-96 items-center justify-center text-slate-400">加载中...</div>}>
+      <PostEditorContent />
     </Suspense>
   );
 }

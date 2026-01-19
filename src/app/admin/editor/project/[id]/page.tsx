@@ -4,8 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api-client";
 import { getAssetUrl } from "@/lib/utils";
-import TiptapEditor from "@/components/editor/TiptapEditor";
-import { ArrowLeft, Save, Settings, Loader2, Image as ImageIcon, Briefcase, Github, ExternalLink, Plus, X as XIcon, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Save, Settings, Loader2, Image as ImageIcon, Briefcase, Github, ExternalLink, Plus, X as XIcon, Construction } from "lucide-react";
 import Link from "next/link";
 import TextareaAutosize from 'react-textarea-autosize';
 import ImageCropper from "@/components/admin/ImageCropper";
@@ -324,11 +323,23 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
             minRows={1}
         />
         
-        <TiptapEditor 
-            initialContent={fullDescription}
-            onChange={setFullDescription}
-            className="min-h-[60vh]"
-        />
+        {/* 编辑器占位 - 等待新编辑器实现 */}
+        <div className="min-h-[60vh] flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+          <div className="p-4 bg-amber-100 rounded-full mb-4">
+            <Construction className="w-8 h-8 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-700 mb-2">编辑器正在重新设计中</h3>
+          <p className="text-sm text-slate-500 text-center max-w-md">
+            新的编辑器即将上线，敬请期待！<br/>
+            当前内容（如有）将被保留。
+          </p>
+          {fullDescription && (
+            <div className="mt-6 p-4 bg-white rounded-xl border border-slate-200 max-w-2xl w-full">
+              <p className="text-xs font-bold text-slate-400 uppercase mb-2">当前内容预览</p>
+              <pre className="text-sm text-slate-600 whitespace-pre-wrap overflow-auto max-h-48">{fullDescription.substring(0, 500)}{fullDescription.length > 500 ? '...' : ''}</pre>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Image Cropper */}
