@@ -148,7 +148,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                              const json = JSON.parse(post.content);
                              if (json && json.type === 'doc') {
                                return (
-                                 <div className="structured-editor bg-transparent p-0">
+                                 <div className="structured-editor !bg-transparent p-0">
                                    <div className="ProseMirror" dangerouslySetInnerHTML={{ __html: jsonToHTML(json) }} />
                                    <EditorEnhancer />
                                  </div>

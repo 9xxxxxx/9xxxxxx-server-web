@@ -53,6 +53,25 @@ export default function AdminPostsPage() {
     }
   }
 
+  async function toggleStatus(post: Post, e: React.MouseEvent) {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation();
+    
+    try {
+      const newStatus = !post.published;
+      await fetchAPI(`/api/posts/${post.id}`, { 
+        method: "PUT",
+        body: JSON.stringify({ published: newStatus })
+      });
+      
+      setPosts(posts.map(p => p.id === post.id ? { ...p, published: newStatus } : p));
+      toast.success(newStatus ? "Post published" : "Post unpublished");
+    } catch (error) {
+       console.error(error);
+      toast.error("Failed to update status");
+    }
+  }
+
   const filteredPosts = posts.filter(p => 
     p.title.toLowerCase().includes(search.toLowerCase()) || 
     p.category.toLowerCase().includes(search.toLowerCase())
@@ -105,10 +124,13 @@ export default function AdminPostsPage() {
                                 <ImageIcon className="w-8 h-8 opacity-50" />
                             </div>
                         )}
-                        <div className="absolute top-2 left-2">
-                             <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${post.published ? 'bg-green-500/90 text-white' : 'bg-amber-400/90 text-white'}`}>
+                        <div className="absolute top-2 left-2 z-10">
+                             <button 
+                                onClick={(e) => toggleStatus(post, e)}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm hover:scale-105 transition-all ${post.published ? 'bg-green-500/90 text-white hover:bg-green-600' : 'bg-amber-400/90 text-white hover:bg-amber-500'}`}
+                             >
                                 {post.published ? "Published" : "Draft"}
-                             </span>
+                             </button>
                         </div>
                     </Link>
 

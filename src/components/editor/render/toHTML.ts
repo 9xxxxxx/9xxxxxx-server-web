@@ -11,6 +11,7 @@ import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import Highlight from '@tiptap/extension-highlight'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Image from '@tiptap/extension-image'
 import { lowlight } from '../extensions/code'
 
 // 用于 HTML 生成的扩展配置（与编辑器一致）
@@ -18,10 +19,16 @@ const htmlExtensions = [
   StarterKit.configure({
     heading: { levels: [1, 2, 3, 4] },
     codeBlock: false,
+    // Disable extensions that we are adding manually to avoid duplicates
+    // dropcursor: false, // Image includes this typically but not strictly
+    // history needs client - not needed for HTML gen
   }),
-  Link,
+  Link.configure({
+    openOnClick: false,
+  }),
   Underline,
   Highlight,
+  Image,
   CodeBlockLowlight.configure({
     lowlight,
   }),

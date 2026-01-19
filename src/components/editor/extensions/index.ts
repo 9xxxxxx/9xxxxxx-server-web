@@ -11,6 +11,7 @@ import { getCodeExtensions } from './code'
 // Phase 2 预留接口
 // import { getTableExtensions } from './table'
 // import { getLifeExtensions } from './life'
+import { getSlashCommandExtension } from './slash-command'
 
 export interface EditorConfig {
   // 未来配置项
@@ -25,6 +26,7 @@ export function createEditorExtensions(config?: EditorConfig): Extensions {
   const extensions: Extensions = [
     ...getCoreExtensions(),
     ...getCodeExtensions(),
+    getSlashCommandExtension(),
   ]
 
   // Phase 2: 表格扩展
