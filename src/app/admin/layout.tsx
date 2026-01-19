@@ -19,11 +19,12 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
+import { getAssetUrl } from "@/lib/utils";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { accessToken, logout } = useAuthStore();
+  const { accessToken, user, logout } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -177,8 +178,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
            </div>
 
            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden">
-                 <img src="https://github.com/shadcn.png" alt="User" />
+              <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center">
+                 {user?.avatar ? (
+                    <img src={getAssetUrl(user.avatar)} alt="User" className="w-full h-full object-cover" />
+                 ) : (
+                    <User className="w-6 h-6 text-slate-400" />
+                 )}
               </div>
            </div>
         </header>

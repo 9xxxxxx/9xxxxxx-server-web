@@ -2,6 +2,8 @@ import { Navbar } from "@/components/Navbar";
 import { getSiteConfig } from "@/lib/site-config";
 import "@/components/editor/editor.css";
 
+import { Footer } from "@/components/Footer";
+
 export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function PortalLayout({
@@ -19,6 +21,8 @@ export default async function PortalLayout({
       <main className="pt-20 min-h-screen">
         {children}
       </main>
+      
+      <Footer />
     </div>
   );
 }

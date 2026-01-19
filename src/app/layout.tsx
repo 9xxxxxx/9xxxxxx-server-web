@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Built with Next.js and Tailwind CSS",
 };
 
-import { Footer } from "@/components/Footer";
+
 import { GlobalBackground } from "@/components/GlobalBackground";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { CommandMenu } from "@/components/CommandMenu";
@@ -50,7 +50,6 @@ export default function RootLayout({
           
           <ScrollToTop />
           <Toaster position="top-center" richColors />
-          <Footer />
         </ThemeProvider>
       </body>
     </html>
