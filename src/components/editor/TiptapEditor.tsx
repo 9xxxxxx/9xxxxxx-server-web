@@ -1,6 +1,7 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -138,7 +139,7 @@ export default function TiptapEditor({
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: "rounded-lg bg-[#0d1117] p-4 font-mono text-sm leading-relaxed my-4 shadow-inner border border-slate-800 overflow-x-auto",
+          class: "rounded-lg bg-[#0d1117] text-slate-100 p-4 font-mono text-sm leading-relaxed my-4 shadow-inner border border-slate-800 overflow-x-auto",
         }
       }),
       BubbleMenuExtension,
@@ -345,6 +346,9 @@ export default function TiptapEditor({
         <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive("code")} title="Code">
           <Code className="w-4 h-4" />
         </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editor.isActive("codeBlock")} title="Code Block">
+          <FileCode className="w-4 h-4" />
+        </ToolbarButton>
 
         <Divider />
 
@@ -410,6 +414,26 @@ export default function TiptapEditor({
             )}
         </div>
       </div>
+
+      {editor && (
+        <BubbleMenu editor={editor} shouldShow={({ editor }: { editor: Editor }) => editor.isActive('codeBlock')}>
+           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-1 flex gap-2 items-center">
+              <select 
+                className="bg-transparent text-sm text-slate-700 dark:text-slate-300 outline-none border-none cursor-pointer py-1 px-2"
+                defaultValue="null"
+                onChange={(event) => editor.chain().focus().updateAttributes('codeBlock', { language: event.target.value }).run()}
+                value={editor.getAttributes('codeBlock').language || 'null'}
+              >
+                <option value="null">Auto</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="js">JavaScript</option>
+                <option value="ts">TypeScript</option>
+                <option value="python">Python</option>
+              </select>
+           </div>
+        </BubbleMenu>
+      )}
 
 
 
