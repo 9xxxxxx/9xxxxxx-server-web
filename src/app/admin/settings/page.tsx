@@ -6,7 +6,7 @@ import { SiteConfig } from "@/lib/site-config";
 import { Loader2, Save, Image as ImageIcon, User, CheckCircle2, Plus, X } from "lucide-react";
 import { getAssetUrl } from "@/lib/utils";
 import { motion } from "framer-motion";
-import ImageCropper from "@/components/admin/ImageCropper";
+import ImageEditor from "@/components/editor/ImageEditor";
 import { useAuthStore, User as UserType } from "@/lib/auth-store";
 
 export default function SettingsPage() {
@@ -31,10 +31,9 @@ export default function SettingsPage() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
   
-  // Image cropping state
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
-  const [showCropper, setShowCropper] = useState(false);
-  const [croppingType, setCroppingType] = useState<"site" | "personal">("site");
+  // 图片编辑器状态
+  const [showImageEditor, setShowImageEditor] = useState(false);
+  const [imageEditorType, setImageEditorType] = useState<"site" | "personal">("site");
 
   useEffect(() => {
     // Load Site Config
@@ -61,19 +60,18 @@ export default function SettingsPage() {
       .catch((err) => console.error("Failed to load personal profile", err));
   }, [setUser]);
 
-  const handleImageUpload = (type: "site" | "personal") => async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const tempUrl = URL.createObjectURL(file);
-    setTempImageUrl(tempUrl);
-    setCroppingType(type);
-    setShowCropper(true);
+  // 打开图片编辑器
+  const openImageEditor = (type: "site" | "personal") => {
+    setImageEditorType(type);
+    setShowImageEditor(true);
   };
-  
-  const handleCropComplete = async (croppedImageUrl: string) => {
+
+  // 图片编辑完成回调
+  const handleImageComplete = async (imageUrl: string) => {
     try {
-        const blob = await fetch(croppedImageUrl).then(r => r.blob());
+      // 如果是 blob URL，需要上传
+      if (imageUrl.startsWith('blob:')) {
+        const blob = await fetch(imageUrl).then(r => r.blob());
         const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
         
         const formData = new FormData();
@@ -81,24 +79,31 @@ export default function SettingsPage() {
         
         const token = JSON.parse(localStorage.getItem("admin-auth-storage") || '{}')?.state?.accessToken;
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/upload`, {
-            method: "POST",
-            headers: { ...(token ? { "Authorization": `Bearer ${token}` } : {}) },
-            body: formData
+          method: "POST",
+          headers: { ...(token ? { "Authorization": `Bearer ${token}` } : {}) },
+          body: formData
         });
         
         if (!res.ok) throw new Error("Upload failed");
         const data = await res.json();
         
-        if (croppingType === "site") {
+        if (imageEditorType === "site") {
           setAvatarImage(data.url);
         } else {
           setPersonalAvatar(data.url);
         }
-        
-        setShowCropper(false);
-        setTempImageUrl(null);
+      } else {
+        // 已经是 URL，直接使用
+        if (imageEditorType === "site") {
+          setAvatarImage(imageUrl);
+        } else {
+          setPersonalAvatar(imageUrl);
+        }
+      }
+      
+      setShowImageEditor(false);
     } catch (err) {
-        alert("Image upload failed");
+      alert("图片上传失败");
     }
   };
 
@@ -214,10 +219,12 @@ export default function SettingsPage() {
                                 <User className="w-12 h-12" />
                             )}
                         </div>
-                        <label className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                            <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload("personal")} />
+                        <button 
+                           onClick={() => openImageEditor("personal")}
+                           className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                        >
                             <ImageIcon className="w-8 h-8" />
-                        </label>
+                        </button>
                      </div>
                      <p className="text-xs text-slate-400 text-center max-w-[8rem]">Your personal avatar for public display</p>
                  </div>
@@ -274,10 +281,12 @@ export default function SettingsPage() {
                                 <span>{avatarInitial}</span>
                             )}
                         </div>
-                        <label className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                            <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload("site")} />
+                        <button 
+                           onClick={() => openImageEditor("site")}
+                           className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                        >
                             <ImageIcon className="w-8 h-8" />
-                        </label>
+                        </button>
                      </div>
                      <p className="text-xs text-slate-400 text-center max-w-[8rem]">Displayed when no user is logged in</p>
                  </div>
@@ -402,15 +411,11 @@ export default function SettingsPage() {
      </div>
    </div>
    
-   {/* Image Cropper Modal */}
-   {showCropper && tempImageUrl && (
-     <ImageCropper
-       imageSrc={tempImageUrl}
-       onComplete={handleCropComplete}
-       onCancel={() => {
-         setShowCropper(false);
-         setTempImageUrl(null);
-       }}
+   {/* 图片编辑器 */}
+   {showImageEditor && (
+     <ImageEditor
+       onComplete={handleImageComplete}
+       onCancel={() => setShowImageEditor(false)}
        aspect={1}
        shape="round"
      />

@@ -7,7 +7,7 @@ import { getAssetUrl } from "@/lib/utils";
 import { ArrowLeft, Save, Settings, Loader2, Image as ImageIcon, Briefcase, Github, ExternalLink, Plus, X as XIcon } from "lucide-react";
 import Link from "next/link";
 import TextareaAutosize from 'react-textarea-autosize';
-import ImageCropper from "@/components/admin/ImageCropper";
+import ImageEditor from "@/components/editor/ImageEditor";
 import { toast } from "sonner";
 import StructuredEditor, { JSONContent } from "@/components/editor";
 import {
@@ -51,9 +51,8 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
   const [newTech, setNewTech] = useState("");
   const [newFeature, setNewFeature] = useState("");
 
-  // Image Cropping
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
-  const [showCropper, setShowCropper] = useState(false);
+  // 图片编辑器
+  const [showImageEditor, setShowImageEditor] = useState(false);
 
   useEffect(() => {
     if (!isNew) {
@@ -137,44 +136,39 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
       }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-          const objectUrl = URL.createObjectURL(file);
-          setTempImageUrl(objectUrl);
-          setShowCropper(true);
+  // 封面图完成回调
+  const handleCoverImageComplete = async (imageUrl: string) => {
+    const toastId = toast.loading("上传封面中...");
+    try {
+      if (imageUrl.startsWith('blob:')) {
+        const blobRes = await fetch(imageUrl);
+        const blob = await blobRes.blob();
+        
+        const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const token = JSON.parse(localStorage.getItem("admin-auth-storage") || "{}")?.state?.accessToken;
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData
+        });
+        
+        if (!res.ok) throw new Error("Upload failed");
+        
+        const data = await res.json();
+        setImage(data.url);
+        toast.success("上传成功", { id: toastId });
+      } else {
+        setImage(imageUrl);
+        toast.success("封面图已设置", { id: toastId });
       }
-  };
-  
-  const handleCropComplete = async (croppedUrl: string) => {
-      try {
-         const blobRes = await fetch(croppedUrl);
-         const blob = await blobRes.blob();
-         
-         const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-         const formData = new FormData();
-         formData.append("file", file);
-         
-         const token = JSON.parse(localStorage.getItem("admin-auth-storage") || "{}")?.state?.accessToken;
-         const res = await fetch("/api/upload", {
-             method: "POST",
-             headers: token ? { Authorization: `Bearer ${token}` } : {},
-             body: formData
-         });
-         
-         if (!res.ok) {
-           const errorText = await res.text();
-           throw new Error("Upload failed: " + errorText);
-         }
-         
-         const data = await res.json();
-         setImage(data.url);
-         setShowCropper(false);
-         toast.success("封面图已更新");
-      } catch(e) {
-          console.error(e);
-          toast.error("封面图上传失败");
-      }
+      setShowImageEditor(false);
+    } catch(e) {
+      console.error(e);
+      toast.error("封面图上传失败", { id: toastId });
+    }
   };
 
   if (isLoading) return <div className="h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600"/></div>;
@@ -238,20 +232,21 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
                                          <button onClick={() => setImage("")} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white">
                                              <XIcon className="w-4 h-4"/>
                                          </button>
-                                          <label className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white cursor-pointer">
+                                         <button onClick={() => setShowImageEditor(true)} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white">
                                              <ImageIcon className="w-4 h-4"/>
-                                             <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                                         </label>
+                                         </button>
                                      </div>
                                  </div>
                              ) : (
-                                 <label className="block w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all group">
+                                 <button 
+                                     onClick={() => setShowImageEditor(true)}
+                                     className="block w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-400 transition-all group"
+                                 >
                                      <div className="p-3 bg-slate-100 rounded-full mb-2 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
                                          <ImageIcon className="w-6 h-6 text-slate-400 group-hover:text-indigo-600"/>
                                      </div>
                                      <span className="text-xs font-medium text-slate-500 group-hover:text-indigo-600">点击上传封面</span>
-                                     <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                                 </label>
+                                 </button>
                              )}
                          </div>
 
@@ -338,14 +333,13 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
         />
       </main>
 
-      {/* Image Cropper */}
-      {showCropper && tempImageUrl && (
-          <ImageCropper 
-            imageSrc={tempImageUrl} 
-            onComplete={handleCropComplete} 
-            onCancel={() => { setShowCropper(false); setTempImageUrl(null); }}
-            aspect={16/9}
-          />
+      {/* 图片编辑器 */}
+      {showImageEditor && (
+        <ImageEditor
+          onComplete={handleCoverImageComplete}
+          onCancel={() => setShowImageEditor(false)}
+          aspect={16/9}
+        />
       )}
     </div>
   );

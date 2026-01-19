@@ -279,6 +279,7 @@
 
 /* ========================================
    代码高亮主题（基于 highlight.js / lowlight）
+   优化 Python 支持
    ======================================== */
 
 /* 注释 */
@@ -290,27 +291,62 @@
   font-style: italic;
 }
 
-/* 关键字 */
+/* 关键字：def, class, if, for, return, import 等 */
 .structured-editor pre code .hljs-keyword,
 .structured-editor pre code .hljs-selector-tag,
-.structured-editor pre code .hljs-built_in,
-.structured-editor pre code .hljs-name,
 .structured-editor .hljs-keyword,
-.structured-editor .hljs-selector-tag,
-.structured-editor .hljs-built_in,
-.structured-editor .hljs-name {
+.structured-editor .hljs-selector-tag {
   color: #c084fc;
+  font-weight: 500;
+}
+
+/* 内置函数：print, len, range, str 等 */
+.structured-editor pre code .hljs-built_in,
+.structured-editor .hljs-built_in {
+  color: #38bdf8;
+}
+
+/* 函数名/方法名 */
+.structured-editor pre code .hljs-title,
+.structured-editor pre code .hljs-title\.function_,
+.structured-editor pre code .hljs-title\.function,
+.structured-editor .hljs-title,
+.structured-editor .hljs-title\.function_,
+.structured-editor .hljs-title\.function {
+  color: #60a5fa;
+  font-weight: 500;
+}
+
+/* 类名 */
+.structured-editor pre code .hljs-title\.class_,
+.structured-editor pre code .hljs-title\.class,
+.structured-editor pre code .hljs-class .hljs-title,
+.structured-editor .hljs-title\.class_,
+.structured-editor .hljs-title\.class,
+.structured-editor .hljs-class .hljs-title {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+/* 继承类名 */
+.structured-editor pre code .hljs-title\.class\.inherited__,
+.structured-editor .hljs-title\.class\.inherited__ {
+  color: #fb923c;
+}
+
+/* 装饰器 @property, @staticmethod 等 */
+.structured-editor pre code .hljs-meta,
+.structured-editor pre code .hljs-decorator,
+.structured-editor .hljs-meta,
+.structured-editor .hljs-decorator {
+  color: #f472b6;
 }
 
 /* 字符串 */
 .structured-editor pre code .hljs-string,
-.structured-editor pre code .hljs-attr,
 .structured-editor pre code .hljs-symbol,
-.structured-editor pre code .hljs-bullet,
 .structured-editor .hljs-string,
-.structured-editor .hljs-attr,
-.structured-editor .hljs-symbol,
-.structured-editor .hljs-bullet {
+.structured-editor .hljs-symbol {
   color: #34d399;
 }
 
@@ -322,32 +358,33 @@
   color: #fb923c;
 }
 
-/* 函数 */
-.structured-editor pre code .hljs-title,
-.structured-editor pre code .hljs-section,
-.structured-editor .hljs-title,
-.structured-editor .hljs-section {
-  color: #60a5fa;
+/* self, cls 参数 */
+.structured-editor pre code .hljs-variable\.language_,
+.structured-editor pre code .hljs-variable\.constant_,
+.structured-editor .hljs-variable\.language_,
+.structured-editor .hljs-variable\.constant_ {
+  color: #f472b6;
+  font-style: italic;
 }
 
-/* 类型 */
-.structured-editor pre code .hljs-type,
-.structured-editor pre code .hljs-class,
-.structured-editor .hljs-type,
-.structured-editor .hljs-class {
-  color: #fbbf24;
-}
-
-/* 变量 */
+/* 普通变量 */
 .structured-editor pre code .hljs-variable,
 .structured-editor pre code .hljs-template-variable,
 .structured-editor .hljs-variable,
 .structured-editor .hljs-template-variable {
-  color: #f472b6;
+  color: #e5e7eb;
 }
 
-/* 属性 */
+/* 函数参数 */
+.structured-editor pre code .hljs-params,
+.structured-editor .hljs-params {
+  color: #fcd34d;
+}
+
+/* 属性访问 */
+.structured-editor pre code .hljs-attr,
 .structured-editor pre code .hljs-attribute,
+.structured-editor .hljs-attr,
 .structured-editor .hljs-attribute {
   color: #a5b4fc;
 }
@@ -358,24 +395,37 @@
   color: #94a3b8;
 }
 
-/* 函数参数、正则 */
-.structured-editor pre code .hljs-params,
-.structured-editor pre code .hljs-regexp,
-.structured-editor .hljs-params,
-.structured-editor .hljs-regexp {
-  color: #fcd34d;
+/* 标点符号 */
+.structured-editor pre code .hljs-punctuation,
+.structured-editor .hljs-punctuation {
+  color: #94a3b8;
 }
 
-/* 标签 */
+/* 正则表达式 */
+.structured-editor pre code .hljs-regexp,
+.structured-editor .hljs-regexp {
+  color: #f87171;
+}
+
+/* HTML/XML 标签 */
 .structured-editor pre code .hljs-tag,
-.structured-editor .hljs-tag {
+.structured-editor pre code .hljs-name,
+.structured-editor .hljs-tag,
+.structured-editor .hljs-name {
   color: #f472b6;
 }
 
-/* meta */
-.structured-editor pre code .hljs-meta,
-.structured-editor .hljs-meta {
-  color: #94a3b8;
+/* section 标题 */
+.structured-editor pre code .hljs-section,
+.structured-editor .hljs-section {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+/* bullet 列表 */
+.structured-editor pre code .hljs-bullet,
+.structured-editor .hljs-bullet {
+  color: #38bdf8;
 }
 
 /* ========================================

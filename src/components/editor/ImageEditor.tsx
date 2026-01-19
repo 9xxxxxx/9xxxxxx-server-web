@@ -31,6 +31,8 @@ interface ImageEditorProps {
   onCancel: () => void
   /** 裁剪比例 */
   aspect?: number
+  /** 裁剪形状 */
+  shape?: 'rect' | 'round'
   /** 上传处理函数 */
   onUpload?: (file: File) => Promise<string>
 }
@@ -40,6 +42,7 @@ export default function ImageEditor({
   onComplete,
   onCancel,
   aspect = 16 / 9,
+  shape = 'rect',
   onUpload,
 }: ImageEditorProps) {
   const [imageUrl, setImageUrl] = useState(initialImage || '')
@@ -284,6 +287,7 @@ export default function ImageEditor({
                   zoom={zoom}
                   rotation={rotation}
                   aspect={aspect}
+                  cropShape={shape}
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
                   onRotationChange={setRotation}
