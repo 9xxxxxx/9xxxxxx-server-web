@@ -12,8 +12,27 @@ interface FloatingActionsProps {
 
 export function FloatingActions({ likes, postId, projectId }: FloatingActionsProps) {
     const handleShare = () => {
-        navigator.clipboard.writeText(window.location.href);
-        toast.success("链接已复制到剪贴板！");
+        const url = window.location.href;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url);
+            toast.success("链接已复制到剪贴板！");
+        } else {
+            // Fallback
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                toast.success("链接已复制到剪贴板！");
+            } catch (err) {
+                toast.error("复制失败，请手动复制链接");
+            }
+            document.body.removeChild(textArea);
+        }
     };
 
     const scrollToTop = () => {

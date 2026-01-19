@@ -27,7 +27,7 @@ hljs.registerLanguage('css', css);
 hljs.registerLanguage('markdown', markdown);
 import { Post } from "@/lib/blog"; // You might need to check where Post type is defined
 import Link from "next/link";
-import { ArrowLeft, Clock, User, UserCircle2, Hash } from "lucide-react";
+import { ArrowLeft, Clock, User, UserCircle2, Hash, ExternalLink } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
 import { formatDate, getAssetUrl } from "@/lib/utils";
@@ -121,18 +121,12 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
       </div>
 
       {/* Main Content Layout */}
-      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 relative z-40 -mt-24 pb-20">
-         <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr_240px] gap-8">
+      {/* Main Content Layout */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-40 -mt-24 pb-20">
+         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12">
             
-            {/* Left Sidebar: Floating Actions (Desktop) */}
-            <aside className="hidden lg:block relative">
-                 <div className="sticky top-32 flex justify-end pr-4">
-                     <FloatingActions likes={post.likes || 0} postId={post.id || ""} />
-                 </div>
-            </aside>
-
-            {/* Center: Main Content */}
-            <main className="min-w-0"> {/* min-w-0 prevents flex items from overflowing */}
+            {/* Main Content */}
+            <main className="min-w-0">
                 <Link href="/blog" className="inline-flex items-center text-sm font-medium text-white/80 hover:text-white mb-8 transition-colors bg-black/20 hover:bg-black/40 backdrop-blur px-4 py-2 rounded-full shadow-lg">
                     <ArrowLeft className="w-4 h-4 mr-2" /> 返回博客列表
                 </Link>
@@ -147,8 +141,7 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
 
                      {/* Article Body */}
-                     <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24 prose-indigo prose-img:rounded-2xl prose-img:shadow-lg prose-a:text-indigo-600 dark:prose-a:text-indigo-400 hover:prose-a:text-indigo-500 transition-colors">
-                     <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24 prose-indigo prose-img:rounded-2xl prose-img:shadow-lg prose-a:text-indigo-600 dark:prose-a:text-indigo-400 hover:prose-a:text-indigo-500 transition-colors">
+                     <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-32 prose-indigo prose-img:rounded-2xl prose-img:shadow-lg prose-a:text-indigo-600 dark:prose-a:text-indigo-400 hover:prose-a:text-indigo-500 transition-colors">
                          {(() => {
                            try {
                              const json = JSON.parse(post.content);
@@ -164,9 +157,8 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                            return <MarkdownRenderer content={post.content} />;
                          })()}
                      </div>
-                     </div>
 
-                     {/* Mobile Interaction Footer (Visible only on mobile/tablet) */}
+                     {/* Mobile Interaction Footer */}
                      <div className="lg:hidden mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
                           <div className="flex items-center gap-4">
                                 <LikeButton initialLikes={post.likes || 0} postId={post.id} />
@@ -189,10 +181,47 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
                 </div>
             </main>
 
-            {/* Right Sidebar: TOC (Desktop) */}
-            <aside className="hidden lg:block relative">
-                 <div className="sticky top-32 pl-4 border-l border-slate-200/50 dark:border-slate-800/50">
-                     <TableOfContents content={post.content} />
+            {/* Right Sidebar: TOC & Interaction */}
+            <aside className="hidden lg:block space-y-8">
+                 <div className="sticky top-32 space-y-6">
+                     {/* Interaction Card */}
+                     <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-lg border border-white/20 dark:border-slate-800 rounded-2xl p-4 shadow-lg flex items-center justify-between">
+                         <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                             <span>喜欢这篇文章？</span>
+                             <LikeButton initialLikes={post.likes || 0} postId={post.id} className="bg-white dark:bg-slate-800 py-1.5 px-3 shadow-sm text-sm" />
+                         </div>
+                         <button 
+                             onClick={() => {
+                                 const url = window.location.href;
+                                 const handleCopy = () => {
+                                     if (navigator.clipboard && window.isSecureContext) {
+                                         navigator.clipboard.writeText(url);
+                                     } else {
+                                         const textArea = document.createElement("textarea");
+                                         textArea.value = url;
+                                         textArea.style.position = "fixed";
+                                         textArea.style.left = "-9999px";
+                                         document.body.appendChild(textArea);
+                                         textArea.focus();
+                                         textArea.select();
+                                         try { document.execCommand('copy'); } catch (e) {}
+                                         document.body.removeChild(textArea);
+                                     }
+                                     alert("文章链接已复制！"); 
+                                 };
+                                 handleCopy();
+                             }}
+                             className="p-2 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors"
+                             title="分享文章"
+                         >
+                             <ExternalLink className="w-4 h-4" />
+                         </button>
+                     </div>
+
+                     {/* TOC */}
+                     <div className="pl-4 border-l border-slate-200/50 dark:border-slate-800/50">
+                        <TableOfContents content={post.content} />
+                     </div>
                  </div>
             </aside>
          </div>

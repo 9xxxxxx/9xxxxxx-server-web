@@ -21,8 +21,9 @@ export function LikeButton({ initialLikes, projectId, postId, className }: LikeB
     if (isLoading) return;
     
     // Optimistic update
-    setLikes(prev => prev + 1);
-    setHasLiked(true);
+    const isUnliking = hasLiked;
+    setLikes(prev => isUnliking ? prev - 1 : prev + 1);
+    setHasLiked(!isUnliking);
     setIsLoading(true);
 
     try {
@@ -31,20 +32,22 @@ export function LikeButton({ initialLikes, projectId, postId, className }: LikeB
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, postId }),
+        body: JSON.stringify({ projectId, postId, action: isUnliking ? 'unlike' : 'like' }),
       });
 
       if (!res.ok) {
         // Revert on failure
-        setLikes(prev => prev - 1);
-        setHasLiked(false);
+        setLikes(prev => isUnliking ? prev + 1 : prev - 1);
+        setHasLiked(isUnliking);
       } else {
         const data = await res.json();
         setLikes(data.likes);
+        setHasLiked(data.hasLiked ?? !isUnliking);
       }
     } catch (error) {
-      setLikes(prev => prev - 1);
-      setHasLiked(false);
+       // Revert
+       setLikes(prev => isUnliking ? prev + 1 : prev - 1);
+       setHasLiked(isUnliking);
     } finally {
       setIsLoading(false);
     }
