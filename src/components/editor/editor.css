@@ -1,0 +1,419 @@
+/**
+ * 结构化内容编辑器样式系统
+ * 
+ * 设计理念：Content-first, low-chrome, readable, calm
+ */
+
+/* ========================================
+   CSS 变量 - 支持暗色模式
+   ======================================== */
+
+.structured-editor {
+  /* 颜色变量 */
+  --editor-bg: #ffffff;
+  --editor-text: #1f2937;
+  --editor-text-muted: #6b7280;
+  --editor-border: #e5e7eb;
+  --editor-border-muted: #d1d5db;
+  --editor-accent: #4f46e5;
+  --editor-accent-light: #eef2ff;
+  --editor-code-bg: #0f172a;
+  --editor-code-text: #e5e7eb;
+  --editor-inline-code-bg: #f3f4f6;
+  --editor-highlight: rgba(255, 235, 59, 0.35);
+  --editor-blockquote-border: #d1d5db;
+  --editor-selection: rgba(79, 70, 229, 0.15);
+
+  /* 排版变量 */
+  --editor-font-body:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --editor-font-code:
+    "JetBrains Mono", "Fira Code", "Source Code Pro", Consolas, monospace;
+  --editor-font-size: 16px;
+  --editor-line-height: 1.75;
+  --editor-max-width: 720px;
+}
+
+/* 暗色模式 */
+.dark .structured-editor,
+.structured-editor.dark {
+  --editor-bg: #0f172a;
+  --editor-text: #e5e7eb;
+  --editor-text-muted: #9ca3af;
+  --editor-border: #374151;
+  --editor-border-muted: #4b5563;
+  --editor-accent: #818cf8;
+  --editor-accent-light: rgba(129, 140, 248, 0.15);
+  --editor-inline-code-bg: #1e293b;
+  --editor-highlight: rgba(255, 235, 59, 0.25);
+  --editor-blockquote-border: #4b5563;
+  --editor-selection: rgba(129, 140, 248, 0.25);
+}
+
+/* ========================================
+   编辑器布局
+   ======================================== */
+
+.structured-editor {
+  max-width: var(--editor-max-width);
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: var(--editor-font-body);
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+  color: var(--editor-text);
+  background: var(--editor-bg);
+}
+
+.structured-editor .ProseMirror {
+  outline: none;
+  min-height: 400px;
+}
+
+.structured-editor .ProseMirror::selection,
+.structured-editor .ProseMirror *::selection {
+  background: var(--editor-selection);
+}
+
+/* ========================================
+   段落
+   ======================================== */
+
+.structured-editor .ProseMirror p {
+  margin: 0.75em 0;
+}
+
+.structured-editor .ProseMirror p.is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--editor-text-muted);
+  opacity: 0.6;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* ========================================
+   标题
+   ======================================== */
+
+.structured-editor .ProseMirror h1,
+.structured-editor .ProseMirror h2,
+.structured-editor .ProseMirror h3,
+.structured-editor .ProseMirror h4 {
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--editor-text);
+}
+
+.structured-editor .ProseMirror h1 {
+  font-size: 1.9em;
+  margin: 1.5em 0 0.6em;
+  border-bottom: 1px solid var(--editor-border);
+  padding-bottom: 0.3em;
+}
+
+.structured-editor .ProseMirror h2 {
+  font-size: 1.5em;
+  margin: 1.3em 0 0.5em;
+}
+
+.structured-editor .ProseMirror h3 {
+  font-size: 1.25em;
+  margin: 1.1em 0 0.4em;
+}
+
+.structured-editor .ProseMirror h4 {
+  font-size: 1.1em;
+  margin: 1em 0 0.4em;
+}
+
+/* 标题占位符 */
+.structured-editor .ProseMirror h1.is-empty::before,
+.structured-editor .ProseMirror h2.is-empty::before,
+.structured-editor .ProseMirror h3.is-empty::before,
+.structured-editor .ProseMirror h4.is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--editor-text-muted);
+  opacity: 0.5;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* ========================================
+   链接
+   ======================================== */
+
+.structured-editor .ProseMirror a,
+.structured-editor .ProseMirror .editor-link {
+  color: var(--editor-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(79, 70, 229, 0.4);
+  cursor: pointer;
+  transition: text-decoration-color 0.15s;
+}
+
+.structured-editor .ProseMirror a:hover {
+  text-decoration-color: var(--editor-accent);
+}
+
+/* ========================================
+   行内代码
+   ======================================== */
+
+.structured-editor .ProseMirror code {
+  background: var(--editor-inline-code-bg);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  font-family: var(--editor-font-code);
+  font-size: 0.9em;
+  color: var(--editor-text);
+}
+
+/* ========================================
+   代码块
+   ======================================== */
+
+.structured-editor .ProseMirror pre {
+  background: var(--editor-code-bg);
+  color: var(--editor-code-text);
+  padding: 1em 1.25em;
+  border-radius: 8px;
+  margin: 1.25em 0;
+  overflow-x: auto;
+  font-family: var(--editor-font-code);
+  font-size: 0.875em;
+  line-height: 1.6;
+}
+
+.structured-editor .ProseMirror pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* 代码块语言标签 */
+.structured-editor .editor-code-block {
+  position: relative;
+}
+
+/* ========================================
+   引用块
+   ======================================== */
+
+.structured-editor .ProseMirror blockquote {
+  border-left: 4px solid var(--editor-blockquote-border);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--editor-text-muted);
+  font-style: italic;
+}
+
+.structured-editor .ProseMirror blockquote p {
+  margin: 0.5em 0;
+}
+
+/* ========================================
+   列表
+   ======================================== */
+
+.structured-editor .ProseMirror ul,
+.structured-editor .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.75em 0;
+}
+
+.structured-editor .ProseMirror li {
+  margin: 0.25em 0;
+}
+
+.structured-editor .ProseMirror li p {
+  margin: 0;
+}
+
+/* ========================================
+   水平分隔线
+   ======================================== */
+
+.structured-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--editor-border);
+  margin: 2em 0;
+}
+
+/* ========================================
+   高亮
+   ======================================== */
+
+.structured-editor .ProseMirror mark {
+  background: var(--editor-highlight);
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+}
+
+/* ========================================
+   表格（Phase 2 预留）
+   ======================================== */
+
+.structured-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.structured-editor .ProseMirror th,
+.structured-editor .ProseMirror td {
+  border: 1px solid var(--editor-border);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.structured-editor .ProseMirror th {
+  background: var(--editor-inline-code-bg);
+  font-weight: 600;
+}
+
+/* ========================================
+   代码高亮主题（基于 highlight.js）
+   ======================================== */
+
+/* 注释 */
+.structured-editor .hljs-comment,
+.structured-editor .hljs-quote {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* 关键字 */
+.structured-editor .hljs-keyword,
+.structured-editor .hljs-selector-tag,
+.structured-editor .hljs-built_in,
+.structured-editor .hljs-name {
+  color: #c084fc;
+}
+
+/* 字符串 */
+.structured-editor .hljs-string,
+.structured-editor .hljs-attr,
+.structured-editor .hljs-symbol,
+.structured-editor .hljs-bullet {
+  color: #34d399;
+}
+
+/* 数字 */
+.structured-editor .hljs-number,
+.structured-editor .hljs-literal {
+  color: #fb923c;
+}
+
+/* 函数 */
+.structured-editor .hljs-title,
+.structured-editor .hljs-section {
+  color: #60a5fa;
+}
+
+/* 类型 */
+.structured-editor .hljs-type,
+.structured-editor .hljs-class {
+  color: #fbbf24;
+}
+
+/* 变量 */
+.structured-editor .hljs-variable,
+.structured-editor .hljs-template-variable {
+  color: #f472b6;
+}
+
+/* 属性 */
+.structured-editor .hljs-attribute {
+  color: #a5b4fc;
+}
+
+/* 操作符 */
+.structured-editor .hljs-operator {
+  color: #94a3b8;
+}
+
+/* ========================================
+   工具栏样式
+   ======================================== */
+
+.structured-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: var(--editor-bg);
+  border: 1px solid var(--editor-border);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.structured-editor-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.structured-editor-toolbar-divider {
+  width: 1px;
+  height: 1.5rem;
+  background: var(--editor-border);
+  margin: 0 0.5rem;
+}
+
+.structured-editor-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--editor-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.structured-editor-toolbar-btn:hover {
+  background: var(--editor-accent-light);
+  color: var(--editor-accent);
+}
+
+.structured-editor-toolbar-btn.is-active {
+  background: var(--editor-accent-light);
+  color: var(--editor-accent);
+}
+
+.structured-editor-toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.structured-editor-toolbar-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 语言选择器 */
+.structured-editor-language-select {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--editor-border);
+  border-radius: 4px;
+  background: var(--editor-bg);
+  color: var(--editor-text);
+  cursor: pointer;
+}
+
+.structured-editor-language-select:focus {
+  outline: none;
+  border-color: var(--editor-accent);
+}

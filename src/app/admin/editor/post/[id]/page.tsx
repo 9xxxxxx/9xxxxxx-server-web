@@ -4,12 +4,13 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Post } from "@/lib/blog";
 import { useAuthStore } from "@/lib/auth-store";
-import { ArrowLeft, Save, Settings, Loader2, Globe, Layout, Image as ImageIcon, Tag, Hash, X as XIcon, Construction } from "lucide-react";
+import { ArrowLeft, Save, Settings, Loader2, Globe, Layout, Image as ImageIcon, Tag, Hash, X as XIcon } from "lucide-react";
 import Link from "next/link";
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from "sonner";
 import { getAssetUrl } from "@/lib/utils";
 import ImageCropper from "@/components/admin/ImageCropper";
+import StructuredEditor, { JSONContent } from "@/components/editor";
 import {
   Sheet,
   SheetContent,
@@ -36,7 +37,7 @@ export default function PostEditorPage({ params }: EditorPageProps) {
 
   // Form State
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState<JSONContent | null>(null);
   const [slug, setSlug] = useState("");
   const [status, setStatus] = useState<"published" | "draft">("draft");
   const [category, setCategory] = useState("Technology");
@@ -67,7 +68,14 @@ export default function PostEditorPage({ params }: EditorPageProps) {
         const data = await res.json();
         setPost(data);
         setTitle(data.title);
-        setContent(data.content || "");
+        // 内容可能是 JSON 字符串或 Markdown
+        try {
+          const parsed = JSON.parse(data.content);
+          setContent(parsed);
+        } catch {
+          // 旧内容为 Markdown，编辑器会自动转换
+          setContent(data.content || null);
+        }
         setSlug(data.slug);
         setStatus(data.published ? "published" : "draft");
         setCategory(data.category || "Technology");
@@ -118,7 +126,8 @@ export default function PostEditorPage({ params }: EditorPageProps) {
 
       const payload = {
         title,
-        content,
+        // 保存为 JSON 字符串
+        content: content ? JSON.stringify(content) : "",
         slug: slug || autoSlug,
         published: status === "published",
         category,
@@ -369,23 +378,12 @@ export default function PostEditorPage({ params }: EditorPageProps) {
             minRows={1}
         />
 
-        {/* 编辑器占位 - 等待新编辑器实现 */}
-        <div className="min-h-[60vh] flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-          <div className="p-4 bg-amber-100 rounded-full mb-4">
-            <Construction className="w-8 h-8 text-amber-600" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-700 mb-2">编辑器正在重新设计中</h3>
-          <p className="text-sm text-slate-500 text-center max-w-md">
-            新的编辑器即将上线，敬请期待！<br/>
-            当前内容（如有）将被保留。
-          </p>
-          {content && (
-            <div className="mt-6 p-4 bg-white rounded-xl border border-slate-200 max-w-2xl w-full">
-              <p className="text-xs font-bold text-slate-400 uppercase mb-2">当前内容预览</p>
-              <pre className="text-sm text-slate-600 whitespace-pre-wrap overflow-auto max-h-48">{content.substring(0, 500)}{content.length > 500 ? '...' : ''}</pre>
-            </div>
-          )}
-        </div>
+        {/* 结构化内容编辑器 */}
+        <StructuredEditor
+          initialContent={content || undefined}
+          onChange={setContent}
+          className="min-h-[60vh]"
+        />
       </main>
 
       {/* Image Cropper */}
