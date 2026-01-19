@@ -7,6 +7,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { LikeButton } from "@/components/ui/like-button";
 import { CommentSection } from "@/components/ui/comment-section";
 import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
+import { jsonToHTML } from "@/components/editor/render/toHTML";
 
 import { TableOfContents } from "@/components/blog/TableOfContents";
 import { FloatingActions } from "@/components/blog/FloatingActions";
@@ -105,7 +106,16 @@ export default function ProjectPageClient({ project, relatedProjects }: { projec
                            详细方案
                         </h3>
                         <div className="text-slate-600 dark:text-slate-400">
-                            <MarkdownRenderer content={project.fullDescription || ""} />
+                             {(() => {
+                               try {
+                                 const content = project.fullDescription || "";
+                                 const json = JSON.parse(content);
+                                 if (json && json.type === 'doc') {
+                                   return <div className="tiptap" dangerouslySetInnerHTML={{ __html: jsonToHTML(json) }} />;
+                                 }
+                               } catch (e) {}
+                               return <MarkdownRenderer content={project.fullDescription || ""} />;
+                             })()}
                         </div>
                     </div>
 

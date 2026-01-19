@@ -9,6 +9,7 @@ import { MarkdownRenderer } from "@/components/blog/MarkdownRenderer";
 import { formatDate, getAssetUrl } from "@/lib/utils";
 import { LikeButton } from "@/components/ui/like-button";
 import { CommentSection } from "@/components/ui/comment-section";
+import { jsonToHTML } from "@/components/editor/render/toHTML";
 
 interface BlogPostClientProps {
   post: Post;
@@ -123,7 +124,15 @@ export default function BlogPostClient({ post, relatedPosts }: BlogPostClientPro
 
                      {/* Article Body */}
                      <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24 prose-indigo prose-img:rounded-2xl prose-img:shadow-lg prose-a:text-indigo-600 dark:prose-a:text-indigo-400 hover:prose-a:text-indigo-500 transition-colors">
-                         <MarkdownRenderer content={post.content} />
+                         {(() => {
+                           try {
+                             const json = JSON.parse(post.content);
+                             if (json && json.type === 'doc') {
+                               return <div className="tiptap" dangerouslySetInnerHTML={{ __html: jsonToHTML(json) }} />;
+                             }
+                           } catch (e) {}
+                           return <MarkdownRenderer content={post.content} />;
+                         })()}
                      </div>
 
                      {/* Mobile Interaction Footer (Visible only on mobile/tablet) */}

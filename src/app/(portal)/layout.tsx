@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { getSiteConfig } from "@/lib/site-config";
+import "@/components/editor/editor.css";
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
