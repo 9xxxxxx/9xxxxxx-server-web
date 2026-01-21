@@ -215,6 +215,23 @@ export default function PostEditorPage({ params }: EditorPageProps) {
     }
   };
 
+  // 正文图片上传处理函数
+  const handleContentImageUpload = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      body: formData
+    });
+    
+    if (!res.ok) throw new Error("Upload failed");
+    
+    const data = await res.json();
+    return data.url;
+  };
+
   if (isLoading) {
       return (
           <div className="flex h-screen items-center justify-center bg-white">
@@ -391,6 +408,7 @@ export default function PostEditorPage({ params }: EditorPageProps) {
         <StructuredEditor
           initialContent={content || undefined}
           onChange={setContent}
+          onImageUpload={handleContentImageUpload}
           className="min-h-[60vh]"
         />
       </main>

@@ -180,6 +180,24 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
     }
   };
 
+  // 正文图片上传处理函数
+  const handleContentImageUpload = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const token = JSON.parse(localStorage.getItem("admin-auth-storage") || "{}").state?.accessToken;
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData
+    });
+    
+    if (!res.ok) throw new Error("Upload failed");
+    
+    const data = await res.json();
+    return data.url;
+  };
+
   if (isLoading) return <div className="h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600"/></div>;
 
   return (
@@ -338,6 +356,7 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
         <StructuredEditor
           initialContent={fullDescription || undefined}
           onChange={setFullDescription}
+          onImageUpload={handleContentImageUpload}
           className="min-h-[60vh]"
         />
       </main>
