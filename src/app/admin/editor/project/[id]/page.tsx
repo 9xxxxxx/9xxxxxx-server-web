@@ -330,6 +330,16 @@ export default function ProjectEditorPage({ params }: EditorPageProps) {
                                  <button onClick={() => setVisibility("login_required")} className={`flex-1 py-2 text-xs font-bold rounded-lg ${visibility === 'login_required' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-50 text-slate-500'}`}>登录可见</button>
                              </div>
                          </div>
+
+                         <div className="pt-4 border-t">
+                            <button 
+                                onClick={() => handleSave(published)}
+                                disabled={isSaving}
+                                className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                            >
+                                {isSaving ? "保存中..." : "保存更改"}
+                            </button>
+                         </div>
                      </div>
                  </SheetContent>
              </Sheet>
