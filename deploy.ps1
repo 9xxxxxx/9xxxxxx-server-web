@@ -73,6 +73,10 @@ if ($LASTEXITCODE -ne 0) {
 # 同步 Nginx 配置
 scp -i $KEY_PATH -r deploy/ "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
 
+# 上传服务器管理脚本
+Write-Host "📤 正在上传服务器管理脚本..." -ForegroundColor Yellow
+scp -i $KEY_PATH server-manage.sh "$($SERVER_USER)@$($SERVER_HOST):$($SERVER_PATH)/"
+
 # 4. 远程执行部署
 Write-Host "🔧 正在远程执行解压和重启服务..." -ForegroundColor Yellow
 
@@ -80,6 +84,10 @@ $Commands = @(
     # 创建目录结构 (包含上传子目录)
     "mkdir -p $($SERVER_PATH)/app $($SERVER_PATH)/backend /var/www/uploads/{images,data,docs} /var/www/data",
     "chmod 777 /var/www/uploads /var/www/uploads/images /var/www/uploads/data /var/www/uploads/docs /var/www/data",
+    
+    # 设置管理脚本权限并创建符号链接
+    "chmod +x $($SERVER_PATH)/server-manage.sh",
+    "ln -sf $($SERVER_PATH)/server-manage.sh /usr/local/bin/app-manage",
     
     # 清理旧App代码 (保留 backend 的数据/uploads 不受影响，因为是 separate extract)
     # 但我们这里 backend 是覆盖式更新代码
